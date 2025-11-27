@@ -1,0 +1,125 @@
+# SmartKasir POS System - Git Ignore
+
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+[Dd]ebugPS/
+
+## MSBuild
+*.log
+[Mm]SBuild[Ll]og.*
+
+## NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## .NET Core
+project.assets.json
+
+## Rider
+.idea/
+*.sln.iml
+
+## VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+## Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+## JetBrains
+*.sln.iml
+
+## Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+## macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+## User-specific files
+*.userprefs
+
+## Publish output
+publish/
+PublishOutput/
+
+## SQLite databases (local development)
+*.db
+*.db-shm
+*.db-wal
+
+## Backup files
+*.bak
+*.backup
+
+## Environment files
+.env
+.env.local
+.env.*.local
+appsettings.Local.json
+appsettings.*.Local.json
+
+## Secrets
+secrets.json
+*.pfx
+*.p12
+
+## Coverage reports
+coverage/
+*.coverage
+*.coveragexml
+lcov.info
+
+## Test results
+TestResults/
+*.trx
+
+## Kiro specs (keep tracked)
+.kiro/
+.vscode/
+
+## Temporary files
+*.tmp
+*.temp
+~$*
