@@ -1,8 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using SmartKasir.Application.DTOs;
 using SmartKasir.Core.Enums;
 
-namespace SmartKasir.Client.Data;
+namespace SmartKasir.Shared.Data;
 
 /// <summary>
 /// DbContext untuk SQLite local database (offline storage)

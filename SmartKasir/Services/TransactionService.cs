@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SmartKasir.Application.DTOs;
-using SmartKasir.Client.Data;
+using SmartKasir.Shared.Data;
 
 namespace SmartKasir.Client.Services;
 

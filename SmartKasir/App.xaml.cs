@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using SmartKasir.Client.Services;
-using SmartKasir.Client.Data;
+using SmartKasir.Shared.Data;
 
 namespace SmartKasir.Client;
 

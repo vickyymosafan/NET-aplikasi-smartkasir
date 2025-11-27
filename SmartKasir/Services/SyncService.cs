@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using SmartKasir.Client.Data;
+using SmartKasir.Shared.Data;
 using System.Diagnostics;
 
 namespace SmartKasir.Client.Services;

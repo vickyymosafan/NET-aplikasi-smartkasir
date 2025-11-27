@@ -1,7 +1,8 @@
 using FsCheck;
 using FsCheck.Xunit;
-using SmartKasir.Client.Data;
+using SmartKasir.Shared.Data;
 using SmartKasir.Core.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace SmartKasir.Tests.Properties;
 
@@ -15,7 +16,7 @@ public class SyncPropertyTests
     /// Untuk setiap transaksi yang dibuat saat offline, data harus tersimpan di SQLite lokal.
     /// </summary>
     [Property(MaxTest = 100)]
-    public Property OfflineTransaction_ShouldBeSavedLocally(
+    public bool OfflineTransaction_ShouldBeSavedLocally(
         NonEmptyString invoiceNumber,
         PositiveInt totalAmount,
         PositiveInt taxAmount)
@@ -42,7 +43,7 @@ public class SyncPropertyTests
         var saved = dbContext.Transactions.FirstOrDefault(t => t.Id == transaction.Id);
         var result = (saved != null && 
                      saved.InvoiceNumber == invoiceNumber.Get &&
-                     saved.SyncStatus == SyncStatus.Pending).ToProperty();
+                     saved.SyncStatus == SyncStatus.Pending);
 
         dbContext.Dispose();
         return result;
@@ -53,7 +54,7 @@ public class SyncPropertyTests
     /// Untuk setiap konflik data saat sinkronisasi, data dengan timestamp terbaru harus menang (last-write-wins).
     /// </summary>
     [Property(MaxTest = 100)]
-    public Property ConflictResolution_ShouldApplyLastWriteWins(
+    public bool ConflictResolution_ShouldApplyLastWriteWins(
         PositiveInt oldPrice,
         PositiveInt newPrice)
     {
@@ -103,7 +104,7 @@ public class SyncPropertyTests
 
         // Assert - verify newer price is applied
         var updated = dbContext.Products.FirstOrDefault(p => p.Id == productId);
-        var result = (updated != null && updated.Price == newPrice.Get).ToProperty();
+        var result = (updated != null && updated.Price == newPrice.Get);
 
         dbContext.Dispose();
         return result;
@@ -114,7 +115,7 @@ public class SyncPropertyTests
     /// Untuk setiap sinkronisasi yang selesai, data di SQLite lokal harus identik dengan data di PostgreSQL server.
     /// </summary>
     [Property(MaxTest = 100)]
-    public Property SyncCompletion_ShouldMarkTransactionAsSynced(
+    public bool SyncCompletion_ShouldMarkTransactionAsSynced(
         NonEmptyString invoiceNumber)
     {
         // Arrange
@@ -151,7 +152,7 @@ public class SyncPropertyTests
         var synced = dbContext.Transactions.FirstOrDefault(t => t.Id == transactionId);
         var result = (synced != null && 
                      synced.SyncStatus == SyncStatus.Synced &&
-                     synced.SyncedAt.HasValue).ToProperty();
+                     synced.SyncedAt.HasValue);
 
         dbContext.Dispose();
         return result;
@@ -162,7 +163,7 @@ public class SyncPropertyTests
     /// Untuk setiap perubahan status koneksi dari offline ke online, proses sinkronisasi harus dimulai.
     /// </summary>
     [Property(MaxTest = 100)]
-    public Property ConnectionStatusChange_ShouldTriggerSync(
+    public bool ConnectionStatusChange_ShouldTriggerSync(
         PositiveInt pendingTransactionCount)
     {
         // Arrange
@@ -194,7 +195,7 @@ public class SyncPropertyTests
             .Count();
 
         // Assert - verify pending transactions exist
-        var result = (pendingCount == count).ToProperty();
+        var result = (pendingCount == count);
 
         dbContext.Dispose();
         return result;
@@ -205,7 +206,7 @@ public class SyncPropertyTests
     /// Untuk setiap transaksi yang disimpan offline dan kemudian di-sync, data harus tetap konsisten.
     /// </summary>
     [Property(MaxTest = 100)]
-    public Property OfflineTransaction_RoundTrip_ShouldMaintainConsistency(
+    public bool OfflineTransaction_RoundTrip_ShouldMaintainConsistency(
         NonEmptyString invoiceNumber,
         PositiveInt itemCount)
     {
@@ -250,7 +251,7 @@ public class SyncPropertyTests
         // Assert - verify all items are preserved
         var result = (retrieved != null &&
                      retrieved.Items.Count == itemsCount &&
-                     retrieved.InvoiceNumber == invoiceNumber.Get).ToProperty();
+                     retrieved.InvoiceNumber == invoiceNumber.Get);
 
         dbContext.Dispose();
         return result;
