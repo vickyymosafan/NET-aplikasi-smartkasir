@@ -87,4 +87,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 👥 Contributors
 
-- [Your Name]
+- [vickymosafan]
