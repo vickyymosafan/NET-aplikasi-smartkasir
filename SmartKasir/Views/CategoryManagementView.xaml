@@ -1,0 +1,147 @@
+<Window x:Class="SmartKasir.Client.Views.CategoryManagementView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Manajemen Kategori" Height="500" Width="600"
+        Background="{DynamicResource BackgroundBrush}"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="Manajemen Kategori" 
+                   FontSize="24" FontWeight="Bold" 
+                   Foreground="{DynamicResource ForegroundBrush}"
+                   Margin="0,0,0,20"/>
+
+        <!-- Toolbar -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Content="+ Tambah Kategori" 
+                    Command="{Binding ShowCreateFormCommand}"
+                    Style="{DynamicResource PrimaryButtonStyle}"
+                    Margin="0,0,10,0"/>
+            <Button Content="Edit" 
+                    Command="{Binding ShowEditFormCommand}"
+                    IsEnabled="{Binding SelectedCategory, Converter={StaticResource NullToBoolConverter}}"
+                    Style="{DynamicResource SecondaryButtonStyle}"
+                    Margin="0,0,10,0"/>
+            <Button Content="Hapus" 
+                    Command="{Binding RequestDeleteCategoryCommand}"
+                    IsEnabled="{Binding SelectedCategory, Converter={StaticResource NullToBoolConverter}}"
+                    Style="{DynamicResource DangerButtonStyle}"/>
+        </StackPanel>
+
+        <!-- Category DataGrid -->
+        <DataGrid Grid.Row="2" 
+                  ItemsSource="{Binding Categories}"
+                  SelectedItem="{Binding SelectedCategory}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  Background="{DynamicResource CardBackgroundBrush}"
+                  Foreground="{DynamicResource ForegroundBrush}"
+                  BorderBrush="{DynamicResource BorderBrush}"
+                  GridLinesVisibility="Horizontal"
+                  HeadersVisibility="Column">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
+                <DataGridTextColumn Header="Nama Kategori" Binding="{Binding Name}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Loading Overlay -->
+        <Border Grid.RowSpan="3" 
+                Background="#80000000" 
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">
+            <TextBlock Text="Memuat..." 
+                       HorizontalAlignment="Center" 
+                       VerticalAlignment="Center"
+                       Foreground="White" FontSize="18"/>
+        </Border>
+
+        <!-- Form Popup -->
+        <Border Grid.RowSpan="3" 
+                Background="#80000000" 
+                Visibility="{Binding ShowForm, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border Background="{DynamicResource CardBackgroundBrush}" 
+                    CornerRadius="8" 
+                    Padding="20"
+                    Width="350"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="{Binding IsEditing, Converter={StaticResource EditModeToTitleConverter}}" 
+                               FontSize="18" FontWeight="Bold" 
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,0,0,15"/>
+
+                    <TextBlock Text="Nama Kategori" Foreground="{DynamicResource ForegroundBrush}" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,15"/>
+
+                    <TextBlock Text="{Binding ErrorMessage}" 
+                               Foreground="Red" 
+                               TextWrapping="Wrap"
+                               Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVisibilityConverter}}"
+                               Margin="0,0,0,10"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Batal" 
+                                Command="{Binding CancelFormCommand}"
+                                Style="{DynamicResource SecondaryButtonStyle}"
+                                Margin="0,0,10,0"/>
+                        <Button Content="Simpan" 
+                                Command="{Binding SaveCategoryCommand}"
+                                Style="{DynamicResource PrimaryButtonStyle}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- Delete Warning Dialog -->
+        <Border Grid.RowSpan="3" 
+                Background="#80000000" 
+                Visibility="{Binding ShowDeleteWarning, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border Background="{DynamicResource CardBackgroundBrush}" 
+                    CornerRadius="8" 
+                    Padding="20"
+                    Width="400"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="Konfirmasi Hapus" 
+                               FontSize="18" FontWeight="Bold" 
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,0,0,15"/>
+
+                    <TextBlock Text="{Binding DeleteWarningMessage}" 
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,15"/>
+
+                    <TextBlock Text="{Binding ErrorMessage}" 
+                               Foreground="Red" 
+                               TextWrapping="Wrap"
+                               Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVisibilityConverter}}"
+                               Margin="0,0,0,10"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Batal" 
+                                Command="{Binding CancelDeleteCommand}"
+                                Style="{DynamicResource SecondaryButtonStyle}"
+                                Margin="0,0,10,0"/>
+                        <Button Content="Hapus" 
+                                Command="{Binding ConfirmDeleteCategoryCommand}"
+                                Style="{DynamicResource DangerButtonStyle}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
+</Window>

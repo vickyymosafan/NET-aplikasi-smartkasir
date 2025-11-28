@@ -53,6 +53,11 @@ public partial class App : System.Windows.Application
         services.AddScoped<ProductGridViewModel>();
         services.AddScoped<CartViewModel>();
         services.AddScoped<CheckoutViewModel>();
+        // Admin ViewModels
+        services.AddScoped<ProductManagementViewModel>();
+        services.AddScoped<CategoryManagementViewModel>();
+        services.AddScoped<UserManagementViewModel>();
+        services.AddScoped<ReportViewModel>();
 
         // Register Views
         services.AddScoped<LoginView>();
@@ -60,6 +65,11 @@ public partial class App : System.Windows.Application
         services.AddScoped<ProductGridView>();
         services.AddScoped<CartView>();
         services.AddScoped<CheckoutDialog>();
+        // Admin Views
+        services.AddScoped<ProductManagementView>();
+        services.AddScoped<CategoryManagementView>();
+        services.AddScoped<UserManagementView>();
+        services.AddScoped<ReportView>();
 
         // Register MainWindow
         services.AddSingleton<MainWindow>();
