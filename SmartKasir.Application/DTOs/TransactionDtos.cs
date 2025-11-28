@@ -16,6 +16,20 @@ public class TransactionDto
     public PaymentMethod PaymentMethod { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<TransactionItemDto> Items { get; set; } = new();
+
+    public TransactionDto() { }
+    public TransactionDto(Guid id, string invoiceNumber, Guid cashierId, string cashierName, decimal totalAmount, decimal taxAmount, PaymentMethod paymentMethod, DateTime createdAt, List<TransactionItemDto> items)
+    {
+        Id = id;
+        InvoiceNumber = invoiceNumber;
+        CashierId = cashierId;
+        CashierName = cashierName;
+        TotalAmount = totalAmount;
+        TaxAmount = taxAmount;
+        PaymentMethod = paymentMethod;
+        CreatedAt = createdAt;
+        Items = items;
+    }
 }
 
 /// <summary>
@@ -29,6 +43,17 @@ public class TransactionItemDto
     public int Quantity { get; set; }
     public decimal PriceAtMoment { get; set; }
     public decimal Subtotal { get; set; }
+
+    public TransactionItemDto() { }
+    public TransactionItemDto(long id, Guid productId, string productName, int quantity, decimal priceAtMoment, decimal subtotal)
+    {
+        Id = id;
+        ProductId = productId;
+        ProductName = productName;
+        Quantity = quantity;
+        PriceAtMoment = priceAtMoment;
+        Subtotal = subtotal;
+    }
 }
 
 /// <summary>
@@ -39,6 +64,14 @@ public class CreateTransactionRequest
     public List<TransactionItemRequest> Items { get; set; } = new();
     public PaymentMethod PaymentMethod { get; set; }
     public decimal AmountPaid { get; set; }
+
+    public CreateTransactionRequest() { }
+    public CreateTransactionRequest(List<TransactionItemRequest> items, PaymentMethod paymentMethod, decimal amountPaid)
+    {
+        Items = items;
+        PaymentMethod = paymentMethod;
+        AmountPaid = amountPaid;
+    }
 }
 
 /// <summary>
@@ -48,6 +81,13 @@ public class TransactionItemRequest
 {
     public Guid ProductId { get; set; }
     public int Quantity { get; set; }
+
+    public TransactionItemRequest() { }
+    public TransactionItemRequest(Guid productId, int quantity)
+    {
+        ProductId = productId;
+        Quantity = quantity;
+    }
 }
 
 /// <summary>

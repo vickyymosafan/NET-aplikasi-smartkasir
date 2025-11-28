@@ -13,6 +13,19 @@ public class ProductDto
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
     public bool IsActive { get; set; }
+
+    public ProductDto() { }
+    public ProductDto(Guid id, string barcode, string name, decimal price, int stockQty, int categoryId, string categoryName, bool isActive)
+    {
+        Id = id;
+        Barcode = barcode;
+        Name = name;
+        Price = price;
+        StockQty = stockQty;
+        CategoryId = categoryId;
+        CategoryName = categoryName;
+        IsActive = isActive;
+    }
 }
 
 /// <summary>
@@ -25,6 +38,16 @@ public class CreateProductRequest
     public decimal Price { get; set; }
     public int StockQty { get; set; }
     public int CategoryId { get; set; }
+
+    public CreateProductRequest() { }
+    public CreateProductRequest(string barcode, string name, decimal price, int stockQty, int categoryId)
+    {
+        Barcode = barcode;
+        Name = name;
+        Price = price;
+        StockQty = stockQty;
+        CategoryId = categoryId;
+    }
 }
 
 /// <summary>
@@ -37,4 +60,14 @@ public class UpdateProductRequest
     public int? StockQty { get; set; }
     public int? CategoryId { get; set; }
     public bool? IsActive { get; set; }
+
+    public UpdateProductRequest() { }
+    public UpdateProductRequest(string? name, decimal? price, int? stockQty, int? categoryId, bool? isActive)
+    {
+        Name = name;
+        Price = price;
+        StockQty = stockQty;
+        CategoryId = categoryId;
+        IsActive = isActive;
+    }
 }
