@@ -1,5 +1,3 @@
-using SmartKasir.Application.DTOs;
-
 namespace SmartKasir.Client.Services;
 
 /// <summary>
@@ -51,3 +49,13 @@ public class AuthStatusChangedEventArgs : EventArgs
     public bool IsAuthenticated { get; set; }
     public UserDto? User { get; set; }
 }
+
+/// <summary>
+/// Result dari operasi autentikasi
+/// </summary>
+public record AuthResult(
+    bool Success,
+    string? Token,
+    string? RefreshToken,
+    UserDto? User,
+    string? ErrorMessage);

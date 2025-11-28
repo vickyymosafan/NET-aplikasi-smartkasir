@@ -10,11 +10,13 @@
         </Grid.RowDefinitions>
 
         <!-- Search Bar -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="16" Background="{DynamicResource MaterialDesignCardBackground}" Padding="16">
+        <Border Grid.Row="0" Margin="16" Background="{DynamicResource MaterialDesignCardBackground}" Padding="16">
+        <StackPanel Orientation="Horizontal">
             <TextBlock Text="Cari Produk:" VerticalAlignment="Center" Margin="0,0,8,0"/>
             <TextBox x:Name="SearchBox" Width="200" Height="40" Padding="8" Margin="0,0,8,0" materialDesign:HintAssist.Hint="Barcode atau nama"/>
             <Button Content="Cari" Width="80" Height="40" Padding="8"/>
         </StackPanel>
+        </Border>
 
         <!-- Product Grid -->
         <ItemsControl Grid.Row="1" x:Name="ProductsGrid" Margin="16">

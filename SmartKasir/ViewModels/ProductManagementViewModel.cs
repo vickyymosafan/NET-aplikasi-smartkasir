@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SmartKasir.Application.DTOs;
 using SmartKasir.Client.Services;
+using CategoryDto = SmartKasir.Client.Services.CategoryDto;
 
 namespace SmartKasir.Client.ViewModels;
 

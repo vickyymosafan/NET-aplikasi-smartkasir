@@ -30,7 +30,12 @@ public partial class CartViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void AddItem(ProductDto product, int quantity = 1)
+    public void AddItem(ProductDto product)
+    {
+        AddItemWithQuantity(product, 1);
+    }
+
+    public void AddItemWithQuantity(ProductDto product, int quantity)
     {
         if (product == null || quantity <= 0)
             return;
@@ -66,7 +71,13 @@ public partial class CartViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void UpdateQuantity(CartItemViewModel item, int newQuantity)
+    public void UpdateQuantity(CartItemViewModel item)
+    {
+        // Recalculate when quantity changes
+        RecalculateTotal();
+    }
+
+    public void SetItemQuantity(CartItemViewModel item, int newQuantity)
     {
         if (newQuantity <= 0)
         {

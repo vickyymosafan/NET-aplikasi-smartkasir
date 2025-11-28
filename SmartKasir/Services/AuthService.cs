@@ -1,4 +1,7 @@
+using System.IO;
 using SmartKasir.Application.DTOs;
+using ClientUserDto = SmartKasir.Client.Services.UserDto;
+using AppUserDto = SmartKasir.Application.DTOs.UserDto;
 
 namespace SmartKasir.Client.Services;
 
@@ -8,7 +11,7 @@ namespace SmartKasir.Client.Services;
 public class AuthService : IAuthService
 {
     private readonly ISmartKasirApi _api;
-    private UserDto? _currentUser;
+    private ClientUserDto? _currentUser;
     private string? _currentToken;
     private string? _refreshToken;
 
@@ -16,7 +19,7 @@ public class AuthService : IAuthService
 
     public bool IsAuthenticated => _currentUser != null && !string.IsNullOrEmpty(_currentToken);
 
-    public UserDto? CurrentUser => _currentUser;
+    public ClientUserDto? CurrentUser => _currentUser;
 
     public string? CurrentToken => _currentToken;
 
@@ -33,7 +36,7 @@ public class AuthService : IAuthService
             var request = new LoginRequest(username, password);
             var response = await _api.LoginAsync(request);
 
-            _currentUser = response.User;
+            _currentUser = ToClientUserDto(response.User);
             _currentToken = response.Token;
             _refreshToken = response.RefreshToken;
 
@@ -44,7 +47,7 @@ public class AuthService : IAuthService
                 User = _currentUser
             });
 
-            return new AuthResult(true, response.Token, response.RefreshToken, response.User, null);
+            return new AuthResult(true, response.Token, response.RefreshToken, _currentUser, null);
         }
         catch (Exception ex)
         {
@@ -91,7 +94,7 @@ public class AuthService : IAuthService
 
             _currentToken = response.Token;
             _refreshToken = response.RefreshToken;
-            _currentUser = response.User;
+            _currentUser = ToClientUserDto(response.User);
 
             SaveCredentials();
             return true;
@@ -184,5 +187,11 @@ public class AuthService : IAuthService
     private void OnAuthStatusChanged(AuthStatusChangedEventArgs args)
     {
         AuthStatusChanged?.Invoke(this, args);
+    }
+
+    private static ClientUserDto? ToClientUserDto(AppUserDto? appUser)
+    {
+        if (appUser == null) return null;
+        return new ClientUserDto(appUser.Id, appUser.Username, appUser.Role, appUser.IsActive);
     }
 }

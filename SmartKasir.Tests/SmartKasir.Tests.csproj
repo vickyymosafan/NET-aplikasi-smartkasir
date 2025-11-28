@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -12,6 +13,7 @@
     <ProjectReference Include="..\SmartKasir.Application\SmartKasir.Application.csproj" />
     <ProjectReference Include="..\SmartKasir.Infrastructure\SmartKasir.Infrastructure.csproj" />
     <ProjectReference Include="..\SmartKasir.Shared\SmartKasir.Shared.csproj" />
+    <ProjectReference Include="..\SmartKasir\SmartKasir.csproj" />
   </ItemGroup>
 
   <ItemGroup>

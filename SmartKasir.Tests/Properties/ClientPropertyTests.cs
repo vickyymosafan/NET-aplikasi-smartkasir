@@ -75,7 +75,7 @@ public class ClientPropertyTests
                 "Test",
                 true);
 
-            cart.AddItem(product, qty.Get);
+            cart.AddItemWithQuantity(product, qty.Get);
         }
 
         // Calculate expected total
@@ -109,7 +109,7 @@ public class ClientPropertyTests
 
         // Add item with requested quantity
         var qtyToAdd = Math.Min(requestedQty.Get, stock.Get);
-        cart.AddItem(product, qtyToAdd);
+        cart.AddItemWithQuantity(product, qtyToAdd);
 
         // Verify quantity doesn't exceed stock
         var cartItem = cart.Items.FirstOrDefault();
@@ -139,7 +139,7 @@ public class ClientPropertyTests
                 "Test",
                 true);
 
-            cart.AddItem(product, qty.Get);
+            cart.AddItemWithQuantity(product, qty.Get);
         }
 
         // Create checkout view model

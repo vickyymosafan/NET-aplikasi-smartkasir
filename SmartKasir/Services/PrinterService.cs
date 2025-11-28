@@ -14,7 +14,7 @@ public class PrinterService : IPrinterService
     private string? _printerName;
     private bool _isPrinterAvailable;
     private readonly ReceiptBuilder _receiptBuilder;
-    private readonly PrintQueue _printQueue;
+    private readonly Printing.PrintQueue _printQueue;
 
     public event EventHandler<PrinterStatusEventArgs>? PrinterStatusChanged;
 
@@ -24,12 +24,12 @@ public class PrinterService : IPrinterService
     /// <summary>
     /// Get print queue for retry management (Requirement 5.3)
     /// </summary>
-    public PrintQueue Queue => _printQueue;
+    public Printing.PrintQueue Queue => _printQueue;
 
     public PrinterService()
     {
         _receiptBuilder = new ReceiptBuilder();
-        _printQueue = new PrintQueue(maxRetries: 3, retryDelaySeconds: 5);
+        _printQueue = new Printing.PrintQueue(maxRetries: 3, retryDelaySeconds: 5);
         
         // Subscribe to queue events
         _printQueue.JobFailed += OnPrintJobFailed;
