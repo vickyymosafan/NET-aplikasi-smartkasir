@@ -1,6 +1,8 @@
 ﻿using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using SmartKasir.Client.Services;
+using SmartKasir.Client.ViewModels;
+using SmartKasir.Client.Views;
 using SmartKasir.Shared.Data;
 
 namespace SmartKasir.Client;
@@ -45,6 +47,20 @@ public partial class App : System.Windows.Application
         })
         .AddPolicyHandler(GetRetryPolicy());
         
+        // Register ViewModels
+        services.AddScoped<LoginViewModel>();
+        services.AddScoped<DashboardViewModel>();
+        services.AddScoped<ProductGridViewModel>();
+        services.AddScoped<CartViewModel>();
+        services.AddScoped<CheckoutViewModel>();
+
+        // Register Views
+        services.AddScoped<LoginView>();
+        services.AddScoped<DashboardView>();
+        services.AddScoped<ProductGridView>();
+        services.AddScoped<CartView>();
+        services.AddScoped<CheckoutDialog>();
+
         // Register MainWindow
         services.AddSingleton<MainWindow>();
     }
