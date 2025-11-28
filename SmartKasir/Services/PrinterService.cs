@@ -1,4 +1,5 @@
 using SmartKasir.Application.DTOs;
+using SmartKasir.Client.Services.Printing;
 using System.Printing;
 
 namespace SmartKasir.Client.Services;
@@ -6,50 +7,107 @@ namespace SmartKasir.Client.Services;
 /// <summary>
 /// Implementation dari IPrinterService
 /// Handles ESC/POS thermal printer operations
+/// Requirements: 5.1, 5.2, 5.3
 /// </summary>
 public class PrinterService : IPrinterService
 {
     private string? _printerName;
     private bool _isPrinterAvailable;
+    private readonly ReceiptBuilder _receiptBuilder;
+    private readonly PrintQueue _printQueue;
 
     public event EventHandler<PrinterStatusEventArgs>? PrinterStatusChanged;
 
     public bool IsPrinterAvailable => _isPrinterAvailable;
-
     public string? PrinterName => _printerName;
+
+    /// <summary>
+    /// Get print queue for retry management (Requirement 5.3)
+    /// </summary>
+    public PrintQueue Queue => _printQueue;
 
     public PrinterService()
     {
+        _receiptBuilder = new ReceiptBuilder();
+        _printQueue = new PrintQueue(maxRetries: 3, retryDelaySeconds: 5);
+        
+        // Subscribe to queue events
+        _printQueue.JobFailed += OnPrintJobFailed;
+        _printQueue.JobCompleted += OnPrintJobCompleted;
+        
         CheckPrinterAvailability();
+        
+        // Start queue processing
+        _printQueue.StartProcessing(PrintReceiptInternalAsync);
     }
 
+    /// <summary>
+    /// Print receipt - adds to queue for processing (Requirement 5.1)
+    /// </summary>
     public async Task<bool> PrintReceiptAsync(TransactionDto transaction)
     {
         if (!_isPrinterAvailable || string.IsNullOrEmpty(_printerName))
         {
+            // Store for later retry (Requirement 5.3)
+            _printQueue.Enqueue(transaction);
+            
             OnPrinterStatusChanged(new PrinterStatusEventArgs
             {
                 IsAvailable = false,
-                Message = "Printer not available"
+                Message = "Printer tidak tersedia. Struk disimpan untuk dicetak ulang."
             });
             return false;
         }
 
         try
         {
-            var receipt = GenerateReceiptContent(transaction);
-            await PrintToThermalPrinterAsync(receipt);
+            return await PrintReceiptInternalAsync(transaction);
+        }
+        catch (Exception ex)
+        {
+            // Store for retry on failure (Requirement 5.3)
+            _printQueue.Enqueue(transaction);
+            
+            OnPrinterStatusChanged(new PrinterStatusEventArgs
+            {
+                IsAvailable = false,
+                Message = $"Gagal mencetak: {ex.Message}. Struk disimpan untuk dicetak ulang."
+            });
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Internal print method using ESC/POS commands (Requirement 5.2)
+    /// </summary>
+    private async Task<bool> PrintReceiptInternalAsync(TransactionDto transaction)
+    {
+        if (string.IsNullOrEmpty(_printerName))
+        {
+            throw new InvalidOperationException("No printer selected");
+        }
+
+        try
+        {
+            // Generate ESC/POS formatted receipt
+            var receiptBytes = _receiptBuilder.BuildReceipt(transaction);
+            
+            // Send to thermal printer
+            await PrintToThermalPrinterAsync(receiptBytes);
             return true;
         }
         catch (Exception ex)
         {
-            OnPrinterStatusChanged(new PrinterStatusEventArgs
-            {
-                IsAvailable = false,
-                Message = $"Print failed: {ex.Message}"
-            });
-            return false;
+            throw new InvalidOperationException($"Failed to print: {ex.Message}", ex);
         }
+    }
+
+    /// <summary>
+    /// Get receipt preview as text
+    /// </summary>
+    public string GetReceiptPreview(TransactionDto transaction)
+    {
+        return _receiptBuilder.BuildReceiptText(transaction);
     }
 
     public async Task SetPrinterAsync(string printerName)
@@ -79,6 +137,22 @@ public class PrinterService : IPrinterService
         }
 
         return await Task.FromResult(printers);
+    }
+
+    /// <summary>
+    /// Retry all failed print jobs (Requirement 5.3)
+    /// </summary>
+    public int RetryFailedPrints()
+    {
+        return _printQueue.RetryAllFailed();
+    }
+
+    /// <summary>
+    /// Get count of pending prints
+    /// </summary>
+    public int GetPendingPrintCount()
+    {
+        return _printQueue.PendingCount + _printQueue.FailedCount;
     }
 
     private void CheckPrinterAvailability()
@@ -114,7 +188,7 @@ public class PrinterService : IPrinterService
             OnPrinterStatusChanged(new PrinterStatusEventArgs
             {
                 IsAvailable = _isPrinterAvailable,
-                Message = _isPrinterAvailable ? $"Printer ready: {_printerName}" : "No printer available"
+                Message = _isPrinterAvailable ? $"Printer siap: {_printerName}" : "Tidak ada printer tersedia"
             });
         }
         catch
@@ -123,60 +197,15 @@ public class PrinterService : IPrinterService
             OnPrinterStatusChanged(new PrinterStatusEventArgs
             {
                 IsAvailable = false,
-                Message = "Failed to check printer availability"
+                Message = "Gagal memeriksa ketersediaan printer"
             });
         }
     }
 
-    private string GenerateReceiptContent(TransactionDto transaction)
-    {
-        var receipt = new System.Text.StringBuilder();
-
-        // Header
-        receipt.AppendLine("================================");
-        receipt.AppendLine("        SMARTKASIR RECEIPT");
-        receipt.AppendLine("================================");
-        receipt.AppendLine();
-
-        // Invoice info
-        receipt.AppendLine($"Invoice: {transaction.InvoiceNumber}");
-        receipt.AppendLine($"Date: {transaction.CreatedAt:yyyy-MM-dd HH:mm:ss}");
-        receipt.AppendLine($"Cashier: {transaction.CashierName}");
-        receipt.AppendLine();
-
-        // Items
-        receipt.AppendLine("ITEMS:");
-        receipt.AppendLine("--------------------------------");
-        foreach (var item in transaction.Items)
-        {
-            var line = $"{item.ProductName,-20} {item.Quantity,3}x {item.PriceAtMoment,10:C}";
-            receipt.AppendLine(line);
-            receipt.AppendLine($"  Subtotal: {item.Subtotal,30:C}");
-        }
-
-        receipt.AppendLine("--------------------------------");
-        receipt.AppendLine();
-
-        // Totals
-        receipt.AppendLine($"Subtotal: {(transaction.TotalAmount - transaction.TaxAmount),25:C}");
-        receipt.AppendLine($"Tax (10%): {transaction.TaxAmount,25:C}");
-        receipt.AppendLine($"TOTAL: {transaction.TotalAmount,30:C}");
-        receipt.AppendLine();
-
-        // Payment method
-        receipt.AppendLine($"Payment: {transaction.PaymentMethod}");
-        receipt.AppendLine();
-
-        // Footer
-        receipt.AppendLine("================================");
-        receipt.AppendLine("    Thank you for your purchase!");
-        receipt.AppendLine("================================");
-        receipt.AppendLine();
-
-        return receipt.ToString();
-    }
-
-    private async Task PrintToThermalPrinterAsync(string content)
+    /// <summary>
+    /// Send ESC/POS bytes to thermal printer (Requirement 5.2)
+    /// </summary>
+    private async Task PrintToThermalPrinterAsync(byte[] receiptBytes)
     {
         if (string.IsNullOrEmpty(_printerName))
         {
@@ -185,14 +214,13 @@ public class PrinterService : IPrinterService
 
         try
         {
-            // Use Windows Print API
-            var printQueue = new PrintQueue(new PrintServer(), _printerName);
+            // Use Windows Print API with raw bytes
+            var printQueue = new System.Printing.PrintQueue(new PrintServer(), _printerName);
             var printJob = printQueue.AddJob("SmartKasir Receipt");
 
             using (var stream = printJob.JobStream)
             {
-                var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-                stream.Write(bytes, 0, bytes.Length);
+                stream.Write(receiptBytes, 0, receiptBytes.Length);
             }
 
             await Task.CompletedTask;
@@ -201,6 +229,24 @@ public class PrinterService : IPrinterService
         {
             throw new InvalidOperationException($"Failed to print: {ex.Message}", ex);
         }
+    }
+
+    private void OnPrintJobFailed(object? sender, PrintJobEventArgs e)
+    {
+        OnPrinterStatusChanged(new PrinterStatusEventArgs
+        {
+            IsAvailable = _isPrinterAvailable,
+            Message = $"Gagal mencetak struk {e.Job.Transaction.InvoiceNumber}: {e.Job.LastError}"
+        });
+    }
+
+    private void OnPrintJobCompleted(object? sender, PrintJobEventArgs e)
+    {
+        OnPrinterStatusChanged(new PrinterStatusEventArgs
+        {
+            IsAvailable = true,
+            Message = $"Struk {e.Job.Transaction.InvoiceNumber} berhasil dicetak"
+        });
     }
 
     private void OnPrinterStatusChanged(PrinterStatusEventArgs args)
