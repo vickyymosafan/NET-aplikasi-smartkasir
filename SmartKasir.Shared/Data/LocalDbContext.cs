@@ -18,16 +18,23 @@ public class LocalDbContext : DbContext
     public DbSet<LocalProduct> Products { get; set; } = null!;
     public DbSet<LocalSyncLog> SyncLogs { get; set; } = null!;
 
+    public LocalDbContext() { }
+
+    public LocalDbContext(DbContextOptions<LocalDbContext> options) : base(options) { }
+
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
-        // Ensure directory exists
-        var directory = Path.GetDirectoryName(DbPath);
-        if (!Directory.Exists(directory))
+        if (!options.IsConfigured)
         {
-            Directory.CreateDirectory(directory);
-        }
+            // Ensure directory exists
+            var directory = Path.GetDirectoryName(DbPath);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
-        options.UseSqlite($"Data Source={DbPath}");
+            options.UseSqlite($"Data Source={DbPath}");
+        }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

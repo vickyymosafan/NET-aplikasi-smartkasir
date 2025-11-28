@@ -11,6 +11,17 @@ namespace SmartKasir.Tests.Properties;
 /// </summary>
 public class SyncPropertyTests
 {
+    private static LocalDbContext CreateTestDbContext()
+    {
+        var options = new DbContextOptionsBuilder<LocalDbContext>()
+            .UseSqlite($"Data Source=test_{Guid.NewGuid()}.db")
+            .Options;
+        
+        var context = new LocalDbContext(options);
+        context.Database.EnsureCreated();
+        return context;
+    }
+
     /// <summary>
     /// **Feature: smart-kasir-pos, Property 25: Offline Storage**
     /// Untuk setiap transaksi yang dibuat saat offline, data harus tersimpan di SQLite lokal.
@@ -22,7 +33,7 @@ public class SyncPropertyTests
         PositiveInt taxAmount)
     {
         // Arrange
-        var dbContext = new LocalDbContext();
+        var dbContext = CreateTestDbContext();
         var transaction = new LocalTransaction
         {
             Id = Guid.NewGuid(),
@@ -59,7 +70,7 @@ public class SyncPropertyTests
         PositiveInt newPrice)
     {
         // Arrange
-        var dbContext = new LocalDbContext();
+        var dbContext = CreateTestDbContext();
         var productId = Guid.NewGuid();
         
         var oldProduct = new LocalProduct
@@ -119,7 +130,7 @@ public class SyncPropertyTests
         NonEmptyString invoiceNumber)
     {
         // Arrange
-        var dbContext = new LocalDbContext();
+        var dbContext = CreateTestDbContext();
         var transactionId = Guid.NewGuid();
         
         var transaction = new LocalTransaction
@@ -167,7 +178,7 @@ public class SyncPropertyTests
         PositiveInt pendingTransactionCount)
     {
         // Arrange
-        var dbContext = new LocalDbContext();
+        var dbContext = CreateTestDbContext();
         var count = Math.Min(pendingTransactionCount.Get, 100); // Cap at 100
 
         for (int i = 0; i < count; i++)
@@ -211,7 +222,7 @@ public class SyncPropertyTests
         PositiveInt itemCount)
     {
         // Arrange
-        var dbContext = new LocalDbContext();
+        var dbContext = CreateTestDbContext();
         var transactionId = Guid.NewGuid();
         var itemsCount = Math.Min(itemCount.Get, 20); // Cap at 20 items
 

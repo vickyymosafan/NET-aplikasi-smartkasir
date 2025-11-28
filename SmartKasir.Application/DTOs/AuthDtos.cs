@@ -3,19 +3,56 @@ namespace SmartKasir.Application.DTOs;
 /// <summary>
 /// Request untuk login
 /// </summary>
-public record LoginRequest(string Username, string Password);
+public class LoginRequest
+{
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+}
 
 /// <summary>
 /// Response autentikasi berhasil
 /// </summary>
-public record AuthResponse(string Token, string RefreshToken, UserDto User);
+public class AuthResponse
+{
+    public string Token { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
+    public UserDto? User { get; set; }
+
+    public AuthResponse() { }
+    public AuthResponse(string token, string refreshToken, UserDto user)
+    {
+        Token = token;
+        RefreshToken = refreshToken;
+        User = user;
+    }
+}
 
 /// <summary>
 /// Request untuk refresh token
 /// </summary>
-public record RefreshTokenRequest(string RefreshToken);
+public class RefreshTokenRequest
+{
+    public string RefreshToken { get; set; } = string.Empty;
+}
 
 /// <summary>
 /// Result dari operasi autentikasi
 /// </summary>
-public record AuthResult(bool Success, string? Token, string? RefreshToken, UserDto? User, string? ErrorMessage);
+public class AuthResult
+{
+    public bool Success { get; set; }
+    public string? Token { get; set; }
+    public string? RefreshToken { get; set; }
+    public UserDto? User { get; set; }
+    public string? ErrorMessage { get; set; }
+
+    public AuthResult() { }
+    public AuthResult(bool success, string? token, string? refreshToken, UserDto? user, string? errorMessage)
+    {
+        Success = success;
+        Token = token;
+        RefreshToken = refreshToken;
+        User = user;
+        ErrorMessage = errorMessage;
+    }
+}

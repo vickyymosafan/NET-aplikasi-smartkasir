@@ -3,32 +3,38 @@ namespace SmartKasir.Application.DTOs;
 /// <summary>
 /// DTO untuk menampilkan data produk
 /// </summary>
-public record ProductDto(
-    Guid Id,
-    string Barcode,
-    string Name,
-    decimal Price,
-    int StockQty,
-    int CategoryId,
-    string CategoryName,
-    bool IsActive);
+public class ProductDto
+{
+    public Guid Id { get; set; }
+    public string Barcode { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public int StockQty { get; set; }
+    public int CategoryId { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+}
 
 /// <summary>
 /// Request untuk membuat produk baru
 /// </summary>
-public record CreateProductRequest(
-    string Barcode,
-    string Name,
-    decimal Price,
-    int StockQty,
-    int CategoryId);
+public class CreateProductRequest
+{
+    public string Barcode { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public int StockQty { get; set; }
+    public int CategoryId { get; set; }
+}
 
 /// <summary>
 /// Request untuk update produk
 /// </summary>
-public record UpdateProductRequest(
-    string? Name,
-    decimal? Price,
-    int? StockQty,
-    int? CategoryId,
-    bool? IsActive);
+public class UpdateProductRequest
+{
+    public string? Name { get; set; }
+    public decimal? Price { get; set; }
+    public int? StockQty { get; set; }
+    public int? CategoryId { get; set; }
+    public bool? IsActive { get; set; }
+}

@@ -1,12 +1,17 @@
 using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using SmartKasir.Infrastructure.Persistence;
 
 #nullable enable
 
 namespace SmartKasir.Infrastructure.Migrations;
 
 /// <inheritdoc />
+[DbContext(typeof(SmartKasirDbContext))]
+[Migration("20241101000000_InitialCreate")]
 public partial class InitialCreate : Migration
 {
     /// <inheritdoc />
@@ -161,46 +166,25 @@ public partial class InitialCreate : Migration
             column: "Username",
             unique: true);
 
-        // Seed data - Admin user
-        migrationBuilder.InsertData(
-            table: "Users",
-            columns: new[] { "Id", "Username", "PasswordHash", "Role", "IsActive", "CreatedAt" },
-            values: new object[] 
-            { 
-                new Guid("00000000-0000-0000-0000-000000000001"), 
-                "admin", 
-                "$2a$11$rBNdGTkJ.gao4.qLgCa0AOACzOqbPs3fRP8eFGvGJHPO0/RAK.rSi", 
-                "Admin", 
-                true, 
-                new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) 
-            });
+        // Seed data using raw SQL for compatibility
+        migrationBuilder.Sql(@"
+            INSERT INTO ""Users"" (""Id"", ""Username"", ""PasswordHash"", ""Role"", ""IsActive"", ""CreatedAt"")
+            VALUES 
+                ('00000000-0000-0000-0000-000000000001', 'admin', '$2a$11$rBNdGTkJ.gao4.qLgCa0AOACzOqbPs3fRP8eFGvGJHPO0/RAK.rSi', 'Admin', true, '2024-01-01 00:00:00+00'),
+                ('00000000-0000-0000-0000-000000000002', 'kasir1', '$2a$11$rBNdGTkJ.gao4.qLgCa0AOACzOqbPs3fRP8eFGvGJHPO0/RAK.rSi', 'Cashier', true, '2024-01-01 00:00:00+00')
+            ON CONFLICT DO NOTHING;
+        ");
 
-        // Seed data - Cashier user
-        migrationBuilder.InsertData(
-            table: "Users",
-            columns: new[] { "Id", "Username", "PasswordHash", "Role", "IsActive", "CreatedAt" },
-            values: new object[] 
-            { 
-                new Guid("00000000-0000-0000-0000-000000000002"), 
-                "kasir1", 
-                "$2a$11$rBNdGTkJ.gao4.qLgCa0AOACzOqbPs3fRP8eFGvGJHPO0/RAK.rSi", 
-                "Cashier", 
-                true, 
-                new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) 
-            });
-
-        // Seed data - Categories
-        migrationBuilder.InsertData(
-            table: "Categories",
-            columns: new[] { "Id", "Name" },
-            values: new object[,]
-            {
-                { 1, "Makanan" },
-                { 2, "Minuman" },
-                { 3, "Snack" },
-                { 4, "Kebutuhan Rumah Tangga" },
-                { 5, "Elektronik" }
-            });
+        migrationBuilder.Sql(@"
+            INSERT INTO ""Categories"" (""Id"", ""Name"")
+            VALUES 
+                (1, 'Makanan'),
+                (2, 'Minuman'),
+                (3, 'Snack'),
+                (4, 'Kebutuhan Rumah Tangga'),
+                (5, 'Elektronik')
+            ON CONFLICT DO NOTHING;
+        ");
     }
 
     /// <inheritdoc />

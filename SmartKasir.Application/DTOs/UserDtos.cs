@@ -5,19 +5,39 @@ namespace SmartKasir.Application.DTOs;
 /// <summary>
 /// DTO untuk menampilkan data user
 /// </summary>
-public record UserDto(Guid Id, string Username, UserRole Role, bool IsActive, DateTime CreatedAt);
+public class UserDto
+{
+    public Guid Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public UserRole Role { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
 
 /// <summary>
 /// Request untuk membuat user baru
 /// </summary>
-public record CreateUserRequest(string Username, string Password, UserRole Role);
+public class CreateUserRequest
+{
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public UserRole Role { get; set; }
+}
 
 /// <summary>
 /// Request untuk update user
 /// </summary>
-public record UpdateUserRequest(string? Username, UserRole? Role, bool? IsActive);
+public class UpdateUserRequest
+{
+    public string? Username { get; set; }
+    public UserRole? Role { get; set; }
+    public bool? IsActive { get; set; }
+}
 
 /// <summary>
 /// Request untuk reset password
 /// </summary>
-public record ResetPasswordRequest(string NewPassword);
+public class ResetPasswordRequest
+{
+    public string NewPassword { get; set; } = string.Empty;
+}

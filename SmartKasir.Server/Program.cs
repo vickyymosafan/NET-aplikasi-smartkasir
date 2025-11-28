@@ -1,9 +1,11 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SmartKasir.Application.Mappings;
 using SmartKasir.Application.Services;
 using SmartKasir.Infrastructure;
+using SmartKasir.Infrastructure.Persistence;
 using SmartKasir.Server.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -85,4 +87,54 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// Apply database migrations on startup
+await ApplyMigrationsAsync(app);
+
 app.Run();
+
+/// <summary>
+/// Apply pending database migrations automatically on startup
+/// </summary>
+static async Task ApplyMigrationsAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        var context = services.GetRequiredService<SmartKasirDbContext>();
+        
+        logger.LogInformation("Checking for pending database migrations...");
+        
+        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        
+        if (pendingMigrations.Any())
+        {
+            logger.LogInformation("Applying {Count} pending migration(s): {Migrations}", 
+                pendingMigrations.Count(), 
+                string.Join(", ", pendingMigrations));
+            
+            await context.Database.MigrateAsync();
+            
+            logger.LogInformation("Database migrations applied successfully.");
+        }
+        else
+        {
+            logger.LogInformation("Database is up to date. No pending migrations.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while applying database migrations.");
+        
+        // In development, we might want to throw to see the error
+        if (app.Environment.IsDevelopment())
+        {
+            throw;
+        }
+    }
+}
+
+// Required for EF Core design-time tools
+public partial class Program { }
