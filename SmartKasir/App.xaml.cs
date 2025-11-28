@@ -38,6 +38,7 @@ public partial class App : System.Windows.Application
         services.AddScoped<ISyncService, SyncService>();
         services.AddScoped<IPrinterService, PrinterService>();
         services.AddScoped<INavigationService, NavigationService>();
+        services.AddScoped<IBackupService, BackupService>();
         
         // Register API Client
         services.AddHttpClient<ISmartKasirApi>(client =>
@@ -58,6 +59,7 @@ public partial class App : System.Windows.Application
         services.AddScoped<CategoryManagementViewModel>();
         services.AddScoped<UserManagementViewModel>();
         services.AddScoped<ReportViewModel>();
+        services.AddScoped<BackupViewModel>();
 
         // Register Views
         services.AddScoped<LoginView>();
@@ -70,6 +72,7 @@ public partial class App : System.Windows.Application
         services.AddScoped<CategoryManagementView>();
         services.AddScoped<UserManagementView>();
         services.AddScoped<ReportView>();
+        services.AddScoped<BackupView>();
 
         // Register MainWindow
         services.AddSingleton<MainWindow>();

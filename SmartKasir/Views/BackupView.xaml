@@ -1,0 +1,170 @@
+<Window x:Class="SmartKasir.Client.Views.BackupView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Backup &amp; Restore Database" Height="600" Width="800"
+        Background="{DynamicResource BackgroundBrush}"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="Backup &amp; Restore Database" 
+                       FontSize="24" FontWeight="Bold" 
+                       Foreground="{DynamicResource ForegroundBrush}"/>
+            <TextBlock Text="{Binding BackupDirectory, StringFormat='Lokasi: {0}'}" 
+                       Foreground="{DynamicResource MutedForegroundBrush}"
+                       FontSize="12" Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <!-- Messages -->
+        <StackPanel Grid.Row="1">
+            <Border Background="#1B5E20" 
+                    CornerRadius="4" 
+                    Padding="10"
+                    Margin="0,0,0,10"
+                    Visibility="{Binding SuccessMessage, Converter={StaticResource NullToVisibilityConverter}}">
+                <TextBlock Text="{Binding SuccessMessage}" Foreground="White"/>
+            </Border>
+            <Border Background="#B71C1C" 
+                    CornerRadius="4" 
+                    Padding="10"
+                    Margin="0,0,0,10"
+                    Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVisibilityConverter}}">
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="White" TextWrapping="Wrap"/>
+            </Border>
+        </StackPanel>
+
+        <!-- Toolbar -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,15">
+            <Button Content="+ Buat Backup Baru" 
+                    Command="{Binding CreateBackupCommand}"
+                    IsEnabled="{Binding IsProcessing, Converter={StaticResource InverseBoolConverter}}"
+                    Style="{DynamicResource PrimaryButtonStyle}"
+                    Margin="0,0,10,0"/>
+            <Button Content="Restore" 
+                    Command="{Binding RequestRestoreCommand}"
+                    IsEnabled="{Binding SelectedBackup, Converter={StaticResource NullToBoolConverter}}"
+                    Style="{DynamicResource SecondaryButtonStyle}"
+                    Margin="0,0,10,0"/>
+            <Button Content="Hapus" 
+                    Command="{Binding DeleteBackupCommand}"
+                    IsEnabled="{Binding SelectedBackup, Converter={StaticResource NullToBoolConverter}}"
+                    Style="{DynamicResource DangerButtonStyle}"
+                    Margin="0,0,10,0"/>
+            <Button Content="Buka Folder" 
+                    Command="{Binding OpenBackupDirectoryCommand}"
+                    Style="{DynamicResource SecondaryButtonStyle}"/>
+        </StackPanel>
+
+        <!-- Backup List -->
+        <DataGrid Grid.Row="3" 
+                  ItemsSource="{Binding Backups}"
+                  SelectedItem="{Binding SelectedBackup}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  Background="{DynamicResource CardBackgroundBrush}"
+                  Foreground="{DynamicResource ForegroundBrush}"
+                  BorderBrush="{DynamicResource BorderBrush}"
+                  GridLinesVisibility="Horizontal"
+                  HeadersVisibility="Column">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Nama File" Binding="{Binding FileName}" Width="*"/>
+                <DataGridTextColumn Header="Ukuran" Binding="{Binding FileSizeFormatted}" Width="100"/>
+                <DataGridTextColumn Header="Tanggal Dibuat" Binding="{Binding CreatedAt, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" Width="150"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Progress Bar -->
+        <Border Grid.Row="4" 
+                Margin="0,15,0,0"
+                Visibility="{Binding IsProcessing, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel>
+                <TextBlock Text="{Binding ProgressMessage}" 
+                           Foreground="{DynamicResource ForegroundBrush}"
+                           Margin="0,0,0,5"/>
+                <ProgressBar Value="{Binding ProgressPercent}" 
+                             Height="20" 
+                             Minimum="0" 
+                             Maximum="100"/>
+            </StackPanel>
+        </Border>
+
+
+        <!-- Loading Overlay -->
+        <Border Grid.RowSpan="5" 
+                Background="#80000000" 
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">
+            <TextBlock Text="Memuat..." 
+                       HorizontalAlignment="Center" 
+                       VerticalAlignment="Center"
+                       Foreground="White" FontSize="18"/>
+        </Border>
+
+        <!-- Restore Confirmation Dialog (Requirement 10.3) -->
+        <Border Grid.RowSpan="5" 
+                Background="#80000000" 
+                Visibility="{Binding ShowRestoreConfirmation, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Border Background="{DynamicResource CardBackgroundBrush}" 
+                    CornerRadius="8" 
+                    Padding="25"
+                    Width="450"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="⚠️ Konfirmasi Restore" 
+                               FontSize="20" FontWeight="Bold" 
+                               Foreground="#FFA000"
+                               Margin="0,0,0,15"/>
+
+                    <TextBlock Foreground="{DynamicResource ForegroundBrush}" 
+                               TextWrapping="Wrap" 
+                               Margin="0,0,0,10">
+                        <Run Text="Anda akan me-restore database dari file:"/>
+                    </TextBlock>
+
+                    <TextBlock Text="{Binding SelectedBackup.FileName}" 
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource ForegroundBrush}"
+                               Margin="0,0,0,15"/>
+
+                    <Border Background="#B71C1C" CornerRadius="4" Padding="10" Margin="0,0,0,15">
+                        <TextBlock Foreground="White" TextWrapping="Wrap">
+                            <Run FontWeight="Bold" Text="PERINGATAN: "/>
+                            <Run Text="Semua data saat ini akan diganti dengan data dari backup. Proses ini tidak dapat dibatalkan!"/>
+                        </TextBlock>
+                    </Border>
+
+                    <TextBlock Foreground="{DynamicResource ForegroundBrush}" 
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,20">
+                        <Run Text="Apakah Anda yakin ingin melanjutkan?"/>
+                    </TextBlock>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Batal" 
+                                Command="{Binding CancelRestoreCommand}"
+                                Style="{DynamicResource SecondaryButtonStyle}"
+                                Width="100"
+                                Margin="0,0,10,0"/>
+                        <Button Content="Ya, Restore" 
+                                Command="{Binding ConfirmRestoreCommand}"
+                                Style="{DynamicResource DangerButtonStyle}"
+                                Width="120"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
+</Window>
