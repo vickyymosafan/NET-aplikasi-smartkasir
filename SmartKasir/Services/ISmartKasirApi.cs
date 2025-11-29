@@ -219,14 +219,7 @@ public record CreateCategoryRequest(string Name);
 /// </summary>
 public record UpdateCategoryRequest(string? Name);
 
-/// <summary>
-/// DTO untuk user
-/// </summary>
-public record UserDto(
-    Guid Id,
-    string Username,
-    UserRole Role,
-    bool IsActive);
+// UserDto is defined in IAuthService.cs
 
 /// <summary>
 /// Request untuk create user

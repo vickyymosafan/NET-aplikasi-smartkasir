@@ -36,9 +36,10 @@ public class AuthService : IAuthService
             Console.WriteLine($"[AuthService] LoginAsync called with username: {username}");
             
             // TEST: Allow test login without server
+            // Admin login: admin/admin
             if (username == "admin" && password == "admin")
             {
-                Console.WriteLine($"[AuthService] Test login detected, creating mock user");
+                Console.WriteLine($"[AuthService] Test Admin login detected");
                 _currentUser = new ClientUserDto(Guid.NewGuid(), "admin", SmartKasir.Core.Enums.UserRole.Admin, true);
                 _currentToken = "test-token-" + Guid.NewGuid().ToString();
                 _refreshToken = "test-refresh-" + Guid.NewGuid().ToString();
@@ -50,7 +51,26 @@ public class AuthService : IAuthService
                     User = _currentUser
                 });
 
-                Console.WriteLine($"[AuthService] Test login successful");
+                Console.WriteLine($"[AuthService] Admin login successful");
+                return new AuthResult(true, _currentToken, _refreshToken, _currentUser, null);
+            }
+            
+            // Cashier login: kasir/kasir
+            if (username == "kasir" && password == "kasir")
+            {
+                Console.WriteLine($"[AuthService] Test Cashier login detected");
+                _currentUser = new ClientUserDto(Guid.NewGuid(), "kasir", SmartKasir.Core.Enums.UserRole.Cashier, true);
+                _currentToken = "test-token-" + Guid.NewGuid().ToString();
+                _refreshToken = "test-refresh-" + Guid.NewGuid().ToString();
+
+                SaveCredentials();
+                OnAuthStatusChanged(new AuthStatusChangedEventArgs
+                {
+                    IsAuthenticated = true,
+                    User = _currentUser
+                });
+
+                Console.WriteLine($"[AuthService] Cashier login successful");
                 return new AuthResult(true, _currentToken, _refreshToken, _currentUser, null);
             }
 

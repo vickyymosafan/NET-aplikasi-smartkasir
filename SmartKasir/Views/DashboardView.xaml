@@ -4,7 +4,6 @@
              Background="#1a1a1a">
 
     <UserControl.Resources>
-        <!-- Colors -->
         <SolidColorBrush x:Key="BackgroundBrush" Color="#1a1a1a"/>
         <SolidColorBrush x:Key="CardBrush" Color="#2a2a2a"/>
         <SolidColorBrush x:Key="SidebarBrush" Color="#252525"/>
@@ -16,9 +15,7 @@
         <SolidColorBrush x:Key="SuccessBrush" Color="#22c55e"/>
         <SolidColorBrush x:Key="DangerBrush" Color="#ef4444"/>
         <SolidColorBrush x:Key="BorderBrush" Color="#3a3a3a"/>
-        <SolidColorBrush x:Key="InputBrush" Color="#333333"/>
         
-        <!-- Button Style -->
         <Style x:Key="PrimaryButton" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
             <Setter Property="Foreground" Value="White"/>
@@ -29,19 +26,12 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="6" 
-                                Padding="16,10">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="16,10">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource AccentHoverBrush}"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
         
         <Style x:Key="SecondaryButton" TargetType="Button">
@@ -55,21 +45,12 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6" 
-                                Padding="16,10">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,10">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#3a3a3a"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
         
         <Style x:Key="DangerButton" TargetType="Button">
@@ -83,22 +64,20 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6" 
-                                Padding="16,10">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,10">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource DangerBrush}"/>
-                    <Setter Property="Foreground" Value="White"/>
-                </Trigger>
-            </Style.Triggers>
+        </Style>
+        
+        <Style x:Key="ProductCard" TargetType="Border">
+            <Setter Property="Background" Value="#333333"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
     </UserControl.Resources>
 
@@ -108,7 +87,7 @@
             <ColumnDefinition Width="320"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Main Content Area -->
+        <!-- Main Content -->
         <Grid Grid.Column="0" Margin="24">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -127,24 +106,24 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="🛒" FontSize="28" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="{StaticResource AccentBrush}"/>
                     <StackPanel>
-                        <TextBlock Text="SmartKasir POS" 
-                                   FontSize="24" 
-                                   FontWeight="Bold" 
-                                   Foreground="{StaticResource TextPrimaryBrush}"/>
-                        <TextBlock Text="Dashboard Kasir" 
-                                   FontSize="12" 
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
+                        <TextBlock Text="SmartKasir POS" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <TextBlock x:Name="RoleText" Text="Dashboard" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
                     </StackPanel>
                 </StackPanel>
                 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Admin Only: Add Product Button -->
+                    <Button x:Name="AddProductButton" 
+                            Content="➕ Tambah Produk" 
+                            Style="{StaticResource PrimaryButton}"
+                            Click="AddProductButton_Click"
+                            Margin="0,0,12,0"
+                            Visibility="Collapsed"/>
+                    
                     <Border Background="{StaticResource SuccessBrush}" CornerRadius="4" Padding="8,4" Margin="0,0,12,0">
                         <TextBlock Text="● Online" Foreground="White" FontSize="12"/>
                     </Border>
-                    <TextBlock Text="Admin" 
-                               Foreground="{StaticResource TextSecondaryBrush}" 
-                               VerticalAlignment="Center"
-                               FontSize="14"/>
+                    <TextBlock x:Name="UsernameText" Text="User" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" FontSize="14"/>
                 </StackPanel>
             </Grid>
 
@@ -155,32 +134,19 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     
-                    <TextBlock Grid.Column="0" 
-                               Text="🔍" 
-                               FontSize="18" 
-                               VerticalAlignment="Center" 
-                               Foreground="{StaticResource TextSecondaryBrush}"
-                               Margin="0,0,12,0"/>
+                    <TextBlock Grid.Column="0" Text="🔍" FontSize="18" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,12,0"/>
                     
-                    <TextBox x:Name="SearchBox" 
-                             Grid.Column="1"
-                             Background="Transparent"
-                             Foreground="{StaticResource TextPrimaryBrush}"
-                             BorderThickness="0"
-                             FontSize="14"
-                             VerticalAlignment="Center"
-                             Text="Cari produk atau scan barcode..."/>
+                    <TextBox x:Name="SearchBox" Grid.Column="1" Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" BorderThickness="0" FontSize="14" VerticalAlignment="Center"/>
                     
-                    <Button Grid.Column="2" 
-                            Content="Cari" 
-                            Style="{StaticResource PrimaryButton}"
-                            Margin="12,0,0,0"/>
+                    <Button Grid.Column="2" Content="Cari" Style="{StaticResource PrimaryButton}" Click="SearchButton_Click" Margin="12,0,0,0"/>
+                    <Button Grid.Column="3" Content="🔄 Refresh" Style="{StaticResource SecondaryButton}" Click="RefreshButton_Click" Margin="8,0,0,0"/>
                 </Grid>
             </Border>
 
-            <!-- Product Grid Area -->
+            <!-- Product Grid -->
             <Border Grid.Row="2" Background="{StaticResource CardBrush}" CornerRadius="8" Padding="16">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -188,29 +154,41 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     
-                    <TextBlock Grid.Row="0" 
-                               Text="Produk Tersedia" 
-                               FontSize="18" 
-                               FontWeight="SemiBold" 
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               Margin="0,0,0,16"/>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+                        <TextBlock Text="Produk Tersedia" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                        <TextBlock x:Name="ProductCountText" Text=" (0)" FontSize="18" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </StackPanel>
                     
-                    <!-- Product Grid Placeholder -->
-                    <Border Grid.Row="1" 
-                            Background="#222222" 
-                            CornerRadius="6" 
-                            MinHeight="300">
+                    <!-- Product List -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="ProductList">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource ProductCard}" Width="180" MouseLeftButtonUp="ProductCard_Click" Tag="{Binding}">
+                                        <StackPanel>
+                                            <TextBlock Text="📦" FontSize="32" HorizontalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+                                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Medium" Foreground="{StaticResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Barcode}" FontSize="11" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            <TextBlock Text="{Binding Price, StringFormat=Rp {0:N0}}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                                            <TextBlock Text="{Binding StockQty, StringFormat=Stok: {0}}" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    
+                    <!-- Empty State -->
+                    <Border x:Name="EmptyState" Grid.Row="1" Background="#222222" CornerRadius="6" MinHeight="300" Visibility="Visible">
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                             <TextBlock Text="📦" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,12" Foreground="{StaticResource TextSecondaryBrush}"/>
-                            <TextBlock Text="Belum ada produk" 
-                                       FontSize="16" 
-                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                       HorizontalAlignment="Center"/>
-                            <TextBlock Text="Tambahkan produk atau cari dengan barcode" 
-                                       FontSize="12" 
-                                       Foreground="{StaticResource TextMutedBrush}"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,4,0,0"/>
+                            <TextBlock Text="Belum ada produk" FontSize="16" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock x:Name="EmptyStateHint" Text="Klik 'Tambah Produk' untuk menambahkan" FontSize="12" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -218,7 +196,7 @@
         </Grid>
 
         <!-- Cart Sidebar -->
-        <Border Grid.Column="1" Background="{StaticResource SidebarBrush}" Padding="0">
+        <Border Grid.Column="1" Background="{StaticResource SidebarBrush}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -226,61 +204,36 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 
-                <!-- Cart Header -->
                 <Border Grid.Row="0" Background="#2a2a2a" Padding="20">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="🛒" FontSize="18" Foreground="{StaticResource AccentBrush}" Margin="0,0,8,0"/>
-                            <TextBlock Text="Keranjang Belanja" 
-                                   FontSize="18" 
-                                   FontWeight="SemiBold" 
-                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Keranjang Belanja" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}"/>
                         </StackPanel>
-                        <TextBlock Text="0 item" 
-                                   FontSize="12" 
-                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                   Margin="0,4,0,0"/>
+                        <TextBlock x:Name="CartItemCount" Text="0 item" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Border>
                 
-                <!-- Cart Items -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,16">
-                    <StackPanel>
-                        <!-- Empty Cart Message -->
-                        <Border Background="#2a2a2a" CornerRadius="8" Padding="24" Margin="0,0,0,16">
+                    <StackPanel x:Name="CartItemsPanel">
+                        <Border x:Name="EmptyCartMessage" Background="#2a2a2a" CornerRadius="8" Padding="24">
                             <StackPanel HorizontalAlignment="Center">
                                 <TextBlock Text="🛒" FontSize="36" HorizontalAlignment="Center" Margin="0,0,0,8" Foreground="{StaticResource TextSecondaryBrush}"/>
-                                <TextBlock Text="Keranjang kosong" 
-                                           FontSize="14" 
-                                           Foreground="{StaticResource TextSecondaryBrush}"
-                                           HorizontalAlignment="Center"/>
-                                <TextBlock Text="Pilih produk untuk memulai" 
-                                           FontSize="12" 
-                                           Foreground="{StaticResource TextMutedBrush}"
-                                           HorizontalAlignment="Center"
-                                           Margin="0,4,0,0"/>
+                                <TextBlock Text="Keranjang kosong" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
                 
-                <!-- Cart Footer / Checkout -->
                 <Border Grid.Row="2" Background="#2a2a2a" Padding="20">
                     <StackPanel>
-                        <!-- Totals -->
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Subtotal" 
-                                       Foreground="{StaticResource TextSecondaryBrush}" 
-                                       FontSize="14"/>
-                            <TextBlock x:Name="SubtotalText" 
-                                       Grid.Column="1" 
-                                       Text="Rp 0" 
-                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                       FontSize="14"/>
+                            <TextBlock Text="Subtotal" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14"/>
+                            <TextBlock x:Name="SubtotalText" Grid.Column="1" Text="Rp 0" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14"/>
                         </Grid>
                         
                         <Grid Margin="0,0,0,8">
@@ -288,56 +241,58 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Pajak (10%)" 
-                                       Foreground="{StaticResource TextSecondaryBrush}" 
-                                       FontSize="14"/>
-                            <TextBlock x:Name="TaxText" 
-                                       Grid.Column="1" 
-                                       Text="Rp 0" 
-                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                       FontSize="14"/>
+                            <TextBlock Text="Pajak (10%)" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14"/>
+                            <TextBlock x:Name="TaxText" Grid.Column="1" Text="Rp 0" Foreground="{StaticResource TextSecondaryBrush}" FontSize="14"/>
                         </Grid>
                         
-                        <Border BorderBrush="{StaticResource BorderBrush}" 
-                                BorderThickness="0,1,0,0" 
-                                Margin="0,8,0,12" 
-                                Padding="0,12,0,0">
+                        <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Margin="0,8,0,12" Padding="0,12,0,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Total" 
-                                           Foreground="{StaticResource TextPrimaryBrush}" 
-                                           FontSize="18" 
-                                           FontWeight="Bold"/>
-                                <TextBlock x:Name="TotalText" 
-                                           Grid.Column="1" 
-                                           Text="Rp 0" 
-                                           Foreground="{StaticResource AccentBrush}"
-                                           FontSize="18"
-                                           FontWeight="Bold"/>
+                                <TextBlock Text="Total" Foreground="{StaticResource TextPrimaryBrush}" FontSize="18" FontWeight="Bold"/>
+                                <TextBlock x:Name="TotalText" Grid.Column="1" Text="Rp 0" Foreground="{StaticResource AccentBrush}" FontSize="18" FontWeight="Bold"/>
                             </Grid>
                         </Border>
                         
-                        <!-- Action Buttons -->
-                        <Button Content="💳 Checkout" 
-                                Style="{StaticResource PrimaryButton}" 
-                                Height="44" 
-                                Margin="0,0,0,8"/>
-                        
-                        <Button Content="🗑️ Bersihkan" 
-                                Style="{StaticResource SecondaryButton}" 
-                                Height="40" 
-                                Margin="0,0,0,8"/>
-                        
-                        <Button Content="🚪 Logout" 
-                                Style="{StaticResource DangerButton}" 
-                                Height="40"
-                                Click="LogoutButton_Click"/>
+                        <Button Content="💳 Checkout" Style="{StaticResource PrimaryButton}" Height="44" Margin="0,0,0,8"/>
+                        <Button Content="🗑️ Bersihkan" Style="{StaticResource SecondaryButton}" Height="40" Margin="0,0,0,8"/>
+                        <Button Content="🚪 Logout" Style="{StaticResource DangerButton}" Height="40" Click="LogoutButton_Click"/>
                     </StackPanel>
                 </Border>
             </Grid>
+        </Border>
+        
+        <!-- Add Product Dialog (Admin Only) -->
+        <Border x:Name="AddProductDialog" Grid.ColumnSpan="2" Background="#80000000" Visibility="Collapsed">
+            <Border Background="#2a2a2a" CornerRadius="12" Padding="24" Width="400" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="➕ Tambah Produk Baru" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,20"/>
+                    
+                    <TextBlock Text="Barcode" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                    <TextBox x:Name="NewBarcode" Background="#333333" Foreground="White" Padding="12,10" Margin="0,0,0,12" BorderThickness="0"/>
+                    
+                    <TextBlock Text="Nama Produk" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                    <TextBox x:Name="NewName" Background="#333333" Foreground="White" Padding="12,10" Margin="0,0,0,12" BorderThickness="0"/>
+                    
+                    <TextBlock Text="Harga (Rp)" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                    <TextBox x:Name="NewPrice" Background="#333333" Foreground="White" Padding="12,10" Margin="0,0,0,12" BorderThickness="0"/>
+                    
+                    <TextBlock Text="Stok" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                    <TextBox x:Name="NewStock" Background="#333333" Foreground="White" Padding="12,10" Margin="0,0,0,12" BorderThickness="0"/>
+                    
+                    <TextBlock Text="Kategori" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                    <TextBox x:Name="NewCategory" Background="#333333" Foreground="White" Padding="12,10" Margin="0,0,0,16" BorderThickness="0" Text="Umum"/>
+                    
+                    <TextBlock x:Name="ErrorText" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" Margin="0,0,0,12" Visibility="Collapsed"/>
+                    
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Batal" Style="{StaticResource SecondaryButton}" Click="CancelAddProduct_Click" Margin="0,0,8,0"/>
+                        <Button Content="💾 Simpan" Style="{StaticResource PrimaryButton}" Click="SaveProduct_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </Border>
     </Grid>
 </UserControl>

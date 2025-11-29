@@ -46,4 +46,19 @@ public interface IProductService
     /// Refresh product cache dari server
     /// </summary>
     Task RefreshCacheAsync();
+
+    /// <summary>
+    /// Create produk lokal (untuk offline/admin)
+    /// </summary>
+    Task<ProductDto> CreateLocalAsync(string barcode, string name, decimal price, int stockQty, string categoryName);
+
+    /// <summary>
+    /// Update produk lokal
+    /// </summary>
+    Task<ProductDto> UpdateLocalAsync(Guid id, string name, decimal price, int stockQty, bool isActive);
+
+    /// <summary>
+    /// Delete produk lokal
+    /// </summary>
+    Task DeleteLocalAsync(Guid id);
 }

@@ -203,4 +203,90 @@ public class ProductService : IProductService
             // Ignore cache refresh errors
         }
     }
+
+    /// <summary>
+    /// Create produk lokal (untuk Admin)
+    /// </summary>
+    public async Task<ProductDto> CreateLocalAsync(string barcode, string name, decimal price, int stockQty, string categoryName)
+    {
+        Console.WriteLine($"[ProductService] Creating local product: {name}");
+        
+        // Check if barcode already exists
+        var existing = await _dbContext.Products.FirstOrDefaultAsync(p => p.Barcode == barcode);
+        if (existing != null)
+        {
+            throw new InvalidOperationException($"Barcode {barcode} sudah digunakan");
+        }
+
+        var product = new LocalProduct
+        {
+            Id = Guid.NewGuid(),
+            Barcode = barcode,
+            Name = name,
+            Price = price,
+            StockQty = stockQty,
+            CategoryId = 1, // Default category
+            CategoryName = categoryName,
+            IsActive = true,
+            LastSyncedAt = DateTime.UtcNow
+        };
+
+        _dbContext.Products.Add(product);
+        await _dbContext.SaveChangesAsync();
+
+        Console.WriteLine($"[ProductService] Product created with ID: {product.Id}");
+
+        return new ProductDto(
+            product.Id,
+            product.Barcode,
+            product.Name,
+            product.Price,
+            product.StockQty,
+            product.CategoryId,
+            product.CategoryName,
+            product.IsActive);
+    }
+
+    /// <summary>
+    /// Update produk lokal
+    /// </summary>
+    public async Task<ProductDto> UpdateLocalAsync(Guid id, string name, decimal price, int stockQty, bool isActive)
+    {
+        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == id);
+        if (product == null)
+        {
+            throw new InvalidOperationException($"Produk dengan ID {id} tidak ditemukan");
+        }
+
+        product.Name = name;
+        product.Price = price;
+        product.StockQty = stockQty;
+        product.IsActive = isActive;
+        product.LastSyncedAt = DateTime.UtcNow;
+
+        await _dbContext.SaveChangesAsync();
+
+        return new ProductDto(
+            product.Id,
+            product.Barcode,
+            product.Name,
+            product.Price,
+            product.StockQty,
+            product.CategoryId,
+            product.CategoryName,
+            product.IsActive);
+    }
+
+    /// <summary>
+    /// Delete produk lokal (soft delete)
+    /// </summary>
+    public async Task DeleteLocalAsync(Guid id)
+    {
+        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == id);
+        if (product != null)
+        {
+            product.IsActive = false;
+            await _dbContext.SaveChangesAsync();
+        }
+    }
 }

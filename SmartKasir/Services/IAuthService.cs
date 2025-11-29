@@ -59,3 +59,16 @@ public record AuthResult(
     string? RefreshToken,
     UserDto? User,
     string? ErrorMessage);
+
+/// <summary>
+/// DTO untuk user di client
+/// </summary>
+public record UserDto(
+    Guid Id,
+    string Username,
+    SmartKasir.Core.Enums.UserRole Role,
+    bool IsActive)
+{
+    public bool IsAdmin => Role == SmartKasir.Core.Enums.UserRole.Admin;
+    public bool IsCashier => Role == SmartKasir.Core.Enums.UserRole.Cashier;
+}
