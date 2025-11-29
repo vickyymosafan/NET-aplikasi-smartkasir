@@ -70,6 +70,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configure Kestrel to listen on specific port
+builder.WebHost.UseUrls("http://localhost:5146");
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -81,7 +84,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Disabled for local development
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,3 +1,5 @@
+using System.Windows.Controls;
+
 namespace SmartKasir.Client.Services;
 
 /// <summary>
@@ -6,7 +8,17 @@ namespace SmartKasir.Client.Services;
 public interface INavigationService
 {
     /// <summary>
-    /// Navigate ke view tertentu
+    /// Set main content control untuk navigation
+    /// </summary>
+    void SetMainContent(ContentControl contentControl);
+
+    /// <summary>
+    /// Navigate ke view tertentu by type
+    /// </summary>
+    void NavigateTo<T>(object? parameter = null) where T : class;
+
+    /// <summary>
+    /// Navigate ke view tertentu by name
     /// </summary>
     void NavigateTo(string viewName, object? parameter = null);
 
