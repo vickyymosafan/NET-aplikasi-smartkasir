@@ -3,7 +3,7 @@ using SmartKasir.Application.DTOs;
 namespace SmartKasir.Client.Services;
 
 /// <summary>
-/// Service untuk operasi produk
+/// Service untuk operasi produk di client
 /// </summary>
 public interface IProductService
 {
@@ -25,7 +25,7 @@ public interface IProductService
     /// <summary>
     /// Get produk dengan pagination
     /// </summary>
-    Task<PagedResult<ProductDto>> GetPagedAsync(int page = 1, int pageSize = 50);
+    Task<ApiPagedResult<ProductDto>> GetPagedAsync(int page = 1, int pageSize = 50);
 
     /// <summary>
     /// Create produk baru

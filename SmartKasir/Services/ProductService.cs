@@ -121,7 +121,7 @@ public class ProductService : IProductService
             p.Id, p.Barcode, p.Name, p.Price, p.StockQty, p.CategoryId, p.CategoryName, p.IsActive));
     }
 
-    public async Task<PagedResult<ProductDto>> GetPagedAsync(int page = 1, int pageSize = 50)
+    public async Task<ApiPagedResult<ProductDto>> GetPagedAsync(int page = 1, int pageSize = 50)
     {
         if (_syncService.IsOnline)
         {
@@ -147,7 +147,7 @@ public class ProductService : IProductService
             p.Id, p.Barcode, p.Name, p.Price, p.StockQty, p.CategoryId, p.CategoryName, p.IsActive))
             .ToList();
 
-        return new PagedResult<ProductDto>(dtos, totalCount, page, pageSize);
+        return new ApiPagedResult<ProductDto>(dtos, totalCount, page, pageSize);
     }
 
     public async Task<ProductDto> CreateAsync(CreateProductRequest request)

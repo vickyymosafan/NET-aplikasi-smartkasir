@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using SmartKasir.Application.DTOs;
 using SmartKasir.Client.Services;
 
 namespace SmartKasir.Client.ViewModels;
@@ -9,30 +10,12 @@ namespace SmartKasir.Client.ViewModels;
 /// ViewModel untuk CategoryManagementView - CRUD kategori (Admin only)
 /// Requirements: 7.1, 7.2, 7.3, 7.4
 /// </summary>
-public partial class CategoryManagementViewModel : ObservableObject
+public partial class CategoryManagementViewModel : BaseManagementViewModel<CategoryDto>
 {
     private readonly ISmartKasirApi _api;
 
     [ObservableProperty]
-    private ObservableCollection<CategoryDto> categories = new();
-
-    [ObservableProperty]
-    private CategoryDto? selectedCategory;
-
-    [ObservableProperty]
-    private bool isLoading;
-
-    [ObservableProperty]
-    private string? errorMessage;
-
-    [ObservableProperty]
     private string formName = string.Empty;
-
-    [ObservableProperty]
-    private bool isEditing;
-
-    [ObservableProperty]
-    private bool showForm;
 
     [ObservableProperty]
     private bool showDeleteWarning;
@@ -45,83 +28,40 @@ public partial class CategoryManagementViewModel : ObservableObject
         _api = api;
     }
 
+    public override async Task LoadDataAsync() => await LoadCategoriesAsync();
+
     [RelayCommand]
     public async Task LoadCategoriesAsync()
     {
-        try
+        await ExecuteWithLoadingAsync(async () =>
         {
-            IsLoading = true;
-            ErrorMessage = null;
-
             var result = await _api.GetCategoriesAsync();
-            Categories = new ObservableCollection<CategoryDto>(result);
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Gagal memuat kategori: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+            Items = new ObservableCollection<CategoryDto>(result);
+        });
     }
 
-    [RelayCommand]
-    public void ShowCreateForm()
-    {
-        FormName = string.Empty;
-        IsEditing = false;
-        ShowForm = true;
-    }
-
-    [RelayCommand]
-    public void ShowEditForm()
-    {
-        if (SelectedCategory == null) return;
-
-        FormName = SelectedCategory.Name;
-        IsEditing = true;
-        ShowForm = true;
-    }
-
-    [RelayCommand]
-    public void CancelForm()
-    {
-        FormName = string.Empty;
-        ShowForm = false;
-    }
+    public override async Task SaveItemAsync() => await SaveCategoryAsync();
 
     [RelayCommand]
     public async Task SaveCategoryAsync()
     {
-        try
+        await ExecuteWithLoadingAsync(async () =>
         {
-            IsLoading = true;
-            ErrorMessage = null;
-
-            if (IsEditing && SelectedCategory != null)
+            if (IsEditing && SelectedItem != null)
             {
-                var request = new UpdateCategoryRequest(FormName);
-                await _api.UpdateCategoryAsync(SelectedCategory.Id, request);
+                var request = new UpdateCategoryRequest { Name = FormName };
+                await _api.UpdateCategoryAsync(SelectedItem.Id, request);
             }
             else
             {
-                var request = new CreateCategoryRequest(FormName);
+                var request = new CreateCategoryRequest { Name = FormName };
                 await _api.CreateCategoryAsync(request);
             }
 
             ShowForm = false;
-            FormName = string.Empty;
+            ClearFormFields();
             await LoadCategoriesAsync();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Gagal menyimpan kategori: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        });
     }
 
     /// <summary>
@@ -130,12 +70,10 @@ public partial class CategoryManagementViewModel : ObservableObject
     [RelayCommand]
     public void RequestDeleteCategory()
     {
-        if (SelectedCategory == null) return;
+        if (SelectedItem == null) return;
 
-        // Check if category has products - show warning
-        // Note: ProductCount comes from CategoryDto in Application layer
         ShowDeleteWarning = true;
-        DeleteWarningMessage = $"Apakah Anda yakin ingin menghapus kategori '{SelectedCategory.Name}'?";
+        DeleteWarningMessage = $"Apakah Anda yakin ingin menghapus kategori '{SelectedItem.Name}'?";
     }
 
     [RelayCommand]
@@ -148,29 +86,27 @@ public partial class CategoryManagementViewModel : ObservableObject
     [RelayCommand]
     public async Task ConfirmDeleteCategoryAsync()
     {
-        if (SelectedCategory == null) return;
+        if (SelectedItem == null) return;
 
-        try
+        await ExecuteWithLoadingAsync(async () =>
         {
-            IsLoading = true;
-            ErrorMessage = null;
             ShowDeleteWarning = false;
-
-            await _api.DeleteCategoryAsync(SelectedCategory.Id);
+            await _api.DeleteCategoryAsync(SelectedItem.Id);
             await LoadCategoriesAsync();
-        }
-        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
-        {
-            // Referential integrity violation - category has products
-            ErrorMessage = "Tidak dapat menghapus kategori yang masih memiliki produk";
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Gagal menghapus kategori: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        });
     }
+
+    protected override void PopulateFormFromItem(CategoryDto item)
+    {
+        FormName = item.Name;
+    }
+
+    protected override void ClearFormFields()
+    {
+        FormName = string.Empty;
+        SelectedItem = null;
+    }
+
+    protected override string GetConflictErrorMessage() => 
+        "Tidak dapat menghapus kategori yang masih memiliki produk";
 }

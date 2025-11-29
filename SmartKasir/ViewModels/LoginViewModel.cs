@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SmartKasir.Client.Services;
-using SmartKasir.Application.DTOs;
 
 namespace SmartKasir.Client.ViewModels;
 

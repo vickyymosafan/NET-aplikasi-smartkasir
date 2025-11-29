@@ -3,7 +3,7 @@ using SmartKasir.Application.DTOs;
 namespace SmartKasir.Client.Services;
 
 /// <summary>
-/// Service untuk operasi transaksi
+/// Service untuk operasi transaksi di client
 /// </summary>
 public interface ITransactionService
 {
@@ -20,7 +20,7 @@ public interface ITransactionService
     /// <summary>
     /// Get semua transaksi dengan filter
     /// </summary>
-    Task<PagedResult<TransactionDto>> GetTransactionsAsync(
+    Task<ApiPagedResult<TransactionDto>> GetTransactionsAsync(
         DateTime? startDate = null,
         DateTime? endDate = null,
         int page = 1,

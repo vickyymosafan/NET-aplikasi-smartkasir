@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SmartKasir.Application.DTOs;
 using SmartKasir.Client.Services;
-using CategoryDto = SmartKasir.Client.Services.CategoryDto;
 
 namespace SmartKasir.Client.ViewModels;
 
@@ -11,24 +10,12 @@ namespace SmartKasir.Client.ViewModels;
 /// ViewModel untuk ProductManagementView - CRUD produk (Admin only)
 /// Requirements: 6.1, 6.2, 6.3, 6.4, 6.5
 /// </summary>
-public partial class ProductManagementViewModel : ObservableObject
+public partial class ProductManagementViewModel : BaseManagementViewModel<ProductDto>
 {
     private readonly ISmartKasirApi _api;
 
     [ObservableProperty]
-    private ObservableCollection<ProductDto> products = new();
-
-    [ObservableProperty]
     private ObservableCollection<CategoryDto> categories = new();
-
-    [ObservableProperty]
-    private ProductDto? selectedProduct;
-
-    [ObservableProperty]
-    private bool isLoading;
-
-    [ObservableProperty]
-    private string? errorMessage;
 
     [ObservableProperty]
     private int currentPage = 1;
@@ -58,38 +45,22 @@ public partial class ProductManagementViewModel : ObservableObject
     [ObservableProperty]
     private bool formIsActive = true;
 
-    [ObservableProperty]
-    private bool isEditing;
-
-    [ObservableProperty]
-    private bool showForm;
-
     public ProductManagementViewModel(ISmartKasirApi api)
     {
         _api = api;
     }
 
+    public override async Task LoadDataAsync() => await LoadProductsAsync();
 
     [RelayCommand]
     public async Task LoadProductsAsync()
     {
-        try
+        await ExecuteWithLoadingAsync(async () =>
         {
-            IsLoading = true;
-            ErrorMessage = null;
-
             var result = await _api.GetProductsAsync(CurrentPage, PageSize);
-            Products = new ObservableCollection<ProductDto>(result.Items);
+            Items = new ObservableCollection<ProductDto>(result.Items);
             TotalPages = (int)Math.Ceiling((double)result.TotalCount / PageSize);
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Gagal memuat produk: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        });
     }
 
     [RelayCommand]
@@ -106,85 +77,30 @@ public partial class ProductManagementViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    public void ShowCreateForm()
-    {
-        ClearForm();
-        IsEditing = false;
-        ShowForm = true;
-    }
-
-    [RelayCommand]
-    public void ShowEditForm()
-    {
-        if (SelectedProduct == null) return;
-
-        FormBarcode = SelectedProduct.Barcode;
-        FormName = SelectedProduct.Name;
-        FormPrice = SelectedProduct.Price;
-        FormStockQty = SelectedProduct.StockQty;
-        FormCategoryId = SelectedProduct.CategoryId;
-        FormIsActive = SelectedProduct.IsActive;
-        IsEditing = true;
-        ShowForm = true;
-    }
-
-    [RelayCommand]
-    public void CancelForm()
-    {
-        ClearForm();
-        ShowForm = false;
-    }
+    public override async Task SaveItemAsync() => await SaveProductAsync();
 
     [RelayCommand]
     public async Task SaveProductAsync()
     {
-        try
+        await ExecuteWithLoadingAsync(async () =>
         {
-            IsLoading = true;
-            ErrorMessage = null;
-
-            if (IsEditing && SelectedProduct != null)
+            if (IsEditing && SelectedItem != null)
             {
-                // Update existing product
                 var request = new UpdateProductRequest(
-                    FormName,
-                    FormPrice,
-                    FormStockQty,
-                    FormCategoryId,
-                    FormIsActive);
-
-                await _api.UpdateProductAsync(SelectedProduct.Id, request);
+                    FormName, FormPrice, FormStockQty, FormCategoryId, FormIsActive);
+                await _api.UpdateProductAsync(SelectedItem.Id, request);
             }
             else
             {
-                // Create new product - barcode validation handled by server (6.3)
                 var request = new CreateProductRequest(
-                    FormBarcode,
-                    FormName,
-                    FormPrice,
-                    FormStockQty,
-                    FormCategoryId);
-
+                    FormBarcode, FormName, FormPrice, FormStockQty, FormCategoryId);
                 await _api.CreateProductAsync(request);
             }
 
             ShowForm = false;
-            ClearForm();
+            ClearFormFields();
             await LoadProductsAsync();
-        }
-        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
-        {
-            ErrorMessage = "Barcode sudah digunakan oleh produk lain";
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Gagal menyimpan produk: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        });
     }
 
     /// <summary>
@@ -193,25 +109,14 @@ public partial class ProductManagementViewModel : ObservableObject
     [RelayCommand]
     public async Task DeactivateProductAsync()
     {
-        if (SelectedProduct == null) return;
+        if (SelectedItem == null) return;
 
-        try
+        await ExecuteWithLoadingAsync(async () =>
         {
-            IsLoading = true;
-            ErrorMessage = null;
-
             var request = new UpdateProductRequest(null, null, null, null, false);
-            await _api.UpdateProductAsync(SelectedProduct.Id, request);
+            await _api.UpdateProductAsync(SelectedItem.Id, request);
             await LoadProductsAsync();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Gagal menonaktifkan produk: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        });
     }
 
     [RelayCommand]
@@ -234,7 +139,17 @@ public partial class ProductManagementViewModel : ObservableObject
         }
     }
 
-    private void ClearForm()
+    protected override void PopulateFormFromItem(ProductDto item)
+    {
+        FormBarcode = item.Barcode;
+        FormName = item.Name;
+        FormPrice = item.Price;
+        FormStockQty = item.StockQty;
+        FormCategoryId = item.CategoryId;
+        FormIsActive = item.IsActive;
+    }
+
+    protected override void ClearFormFields()
     {
         FormBarcode = string.Empty;
         FormName = string.Empty;
@@ -242,6 +157,8 @@ public partial class ProductManagementViewModel : ObservableObject
         FormStockQty = 0;
         FormCategoryId = 0;
         FormIsActive = true;
-        SelectedProduct = null;
+        SelectedItem = null;
     }
+
+    protected override string GetConflictErrorMessage() => "Barcode sudah digunakan oleh produk lain";
 }

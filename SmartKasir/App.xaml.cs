@@ -93,13 +93,13 @@ public partial class App : System.Windows.Application
             }
             
             Log($"MainWindow created: {mainWindow != null}");
-            Log($"MainWindow Title: {mainWindow.Title}");
-            Log($"MainWindow Size: {mainWindow.Width}x{mainWindow.Height}");
+            Log($"MainWindow Title: {mainWindow?.Title ?? "N/A"}");
+            Log($"MainWindow Size: {mainWindow?.Width ?? 0}x{mainWindow?.Height ?? 0}");
             
             Log("Step 5: Showing MainWindow...");
             
             // Ensure window is on screen and visible
-            mainWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            mainWindow!.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             mainWindow.WindowState = WindowState.Normal;
             mainWindow.Topmost = true; // Temporarily bring to front
             

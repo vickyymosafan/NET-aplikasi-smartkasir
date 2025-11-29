@@ -39,7 +39,7 @@ public interface ISmartKasirApi
     /// Get semua produk dengan pagination
     /// </summary>
     [Get("/api/v1/products")]
-    Task<PagedResult<ProductDto>> GetProductsAsync(
+    Task<ApiPagedResult<ProductDto>> GetProductsAsync(
         [Query] int page = 1,
         [Query] int pageSize = 50);
 
@@ -93,7 +93,7 @@ public interface ISmartKasirApi
     /// Get semua transaksi dengan filter (Admin only)
     /// </summary>
     [Get("/api/v1/transactions")]
-    Task<PagedResult<TransactionDto>> GetTransactionsAsync(
+    Task<ApiPagedResult<TransactionDto>> GetTransactionsAsync(
         [Query] DateTime? startDate = null,
         [Query] DateTime? endDate = null,
         [Query] int page = 1,
@@ -193,49 +193,17 @@ public interface ISmartKasirApi
     #endregion
 }
 
+#region Client-specific DTOs (tidak duplikat dengan Application layer)
+
 /// <summary>
-/// Paged result wrapper
+/// Paged result wrapper untuk API responses (client-side)
+/// Berbeda dari PagedResult di Application layer yang memiliki TotalPages
 /// </summary>
-public record PagedResult<T>(
+public record ApiPagedResult<T>(
     List<T> Items,
     int TotalCount,
     int Page,
     int PageSize);
-
-/// <summary>
-/// DTO untuk kategori
-/// </summary>
-public record CategoryDto(
-    int Id,
-    string Name);
-
-/// <summary>
-/// Request untuk create kategori
-/// </summary>
-public record CreateCategoryRequest(string Name);
-
-/// <summary>
-/// Request untuk update kategori
-/// </summary>
-public record UpdateCategoryRequest(string? Name);
-
-// UserDto is defined in IAuthService.cs
-
-/// <summary>
-/// Request untuk create user
-/// </summary>
-public record CreateUserRequest(
-    string Username,
-    string Password,
-    UserRole Role);
-
-/// <summary>
-/// Request untuk update user
-/// </summary>
-public record UpdateUserRequest(
-    string? Username,
-    UserRole? Role,
-    bool? IsActive);
 
 /// <summary>
 /// DTO untuk laporan penjualan harian
@@ -272,3 +240,5 @@ public record ProductSalesDetail(
     string CategoryName,
     int QuantitySold,
     decimal Revenue);
+
+#endregion

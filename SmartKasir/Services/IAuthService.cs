@@ -1,14 +1,16 @@
+using SmartKasir.Application.DTOs;
+
 namespace SmartKasir.Client.Services;
 
 /// <summary>
-/// Service untuk autentikasi pengguna
+/// Service untuk autentikasi pengguna di client
 /// </summary>
 public interface IAuthService
 {
     /// <summary>
     /// Login dengan username dan password
     /// </summary>
-    Task<AuthResult> LoginAsync(string username, string password);
+    Task<ClientAuthResult> LoginAsync(string username, string password);
 
     /// <summary>
     /// Logout dan invalidate token
@@ -28,7 +30,7 @@ public interface IAuthService
     /// <summary>
     /// Get current user
     /// </summary>
-    UserDto? CurrentUser { get; }
+    ClientUserDto? CurrentUser { get; }
 
     /// <summary>
     /// Get current JWT token
@@ -41,29 +43,33 @@ public interface IAuthService
     event EventHandler<AuthStatusChangedEventArgs>? AuthStatusChanged;
 }
 
+#region Client-specific Auth Types
+
 /// <summary>
-/// Event args untuk authentication status change
+/// Event args untuk authentication status change (client-specific)
 /// </summary>
 public class AuthStatusChangedEventArgs : EventArgs
 {
     public bool IsAuthenticated { get; set; }
-    public UserDto? User { get; set; }
+    public ClientUserDto? User { get; set; }
 }
 
 /// <summary>
-/// Result dari operasi autentikasi
+/// Result dari operasi autentikasi di client
+/// Berbeda dari AuthResult di Application layer karena menggunakan ClientUserDto
 /// </summary>
-public record AuthResult(
+public record ClientAuthResult(
     bool Success,
     string? Token,
     string? RefreshToken,
-    UserDto? User,
+    ClientUserDto? User,
     string? ErrorMessage);
 
 /// <summary>
-/// DTO untuk user di client
+/// DTO untuk user di client dengan helper properties
+/// Extends UserDto dari Application layer dengan client-specific functionality
 /// </summary>
-public record UserDto(
+public record ClientUserDto(
     Guid Id,
     string Username,
     SmartKasir.Core.Enums.UserRole Role,
@@ -71,4 +77,12 @@ public record UserDto(
 {
     public bool IsAdmin => Role == SmartKasir.Core.Enums.UserRole.Admin;
     public bool IsCashier => Role == SmartKasir.Core.Enums.UserRole.Cashier;
+    
+    /// <summary>
+    /// Convert dari Application UserDto ke ClientUserDto
+    /// </summary>
+    public static ClientUserDto? FromUserDto(UserDto? dto) =>
+        dto == null ? null : new ClientUserDto(dto.Id, dto.Username, dto.Role, dto.IsActive);
 }
+
+#endregion

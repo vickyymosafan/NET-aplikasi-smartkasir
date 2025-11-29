@@ -28,7 +28,7 @@ public class LocalDbContext : DbContext
         {
             // Ensure directory exists
             var directory = Path.GetDirectoryName(DbPath);
-            if (!Directory.Exists(directory))
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }

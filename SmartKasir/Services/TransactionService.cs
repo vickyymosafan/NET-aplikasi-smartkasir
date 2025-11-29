@@ -179,7 +179,7 @@ public class TransactionService : ITransactionService
                 i.Id, i.ProductId, "", i.Quantity, i.PriceAtMoment, i.Subtotal)).ToList());
     }
 
-    public async Task<PagedResult<TransactionDto>> GetTransactionsAsync(
+    public async Task<ApiPagedResult<TransactionDto>> GetTransactionsAsync(
         DateTime? startDate = null,
         DateTime? endDate = null,
         int page = 1,
@@ -229,7 +229,7 @@ public class TransactionService : ITransactionService
             t.Items.Select(i => new TransactionItemDto(
                 i.Id, i.ProductId, "", i.Quantity, i.PriceAtMoment, i.Subtotal)).ToList())).ToList();
 
-        return new PagedResult<TransactionDto>(dtos, totalCount, page, pageSize);
+        return new ApiPagedResult<TransactionDto>(dtos, totalCount, page, pageSize);
     }
 
     public async Task<string> GenerateInvoiceNumberAsync()

@@ -1,7 +1,5 @@
 using System.IO;
 using SmartKasir.Application.DTOs;
-using ClientUserDto = SmartKasir.Client.Services.UserDto;
-using AppUserDto = SmartKasir.Application.DTOs.UserDto;
 
 namespace SmartKasir.Client.Services;
 
@@ -29,7 +27,7 @@ public class AuthService : IAuthService
         LoadStoredCredentials();
     }
 
-    public async Task<AuthResult> LoginAsync(string username, string password)
+    public async Task<ClientAuthResult> LoginAsync(string username, string password)
     {
         try
         {
@@ -52,7 +50,7 @@ public class AuthService : IAuthService
                 });
 
                 Console.WriteLine($"[AuthService] Admin login successful");
-                return new AuthResult(true, _currentToken, _refreshToken, _currentUser, null);
+                return new ClientAuthResult(true, _currentToken, _refreshToken, _currentUser, null);
             }
             
             // Cashier login: kasir/kasir
@@ -71,14 +69,14 @@ public class AuthService : IAuthService
                 });
 
                 Console.WriteLine($"[AuthService] Cashier login successful");
-                return new AuthResult(true, _currentToken, _refreshToken, _currentUser, null);
+                return new ClientAuthResult(true, _currentToken, _refreshToken, _currentUser, null);
             }
 
             Console.WriteLine($"[AuthService] Attempting server login");
             var request = new LoginRequest(username, password);
             var response = await _api.LoginAsync(request);
 
-            _currentUser = ToClientUserDto(response.User);
+            _currentUser = ClientUserDto.FromUserDto(response.User);
             _currentToken = response.Token;
             _refreshToken = response.RefreshToken;
 
@@ -90,13 +88,13 @@ public class AuthService : IAuthService
             });
 
             Console.WriteLine($"[AuthService] Server login successful");
-            return new AuthResult(true, response.Token, response.RefreshToken, _currentUser, null);
+            return new ClientAuthResult(true, response.Token, response.RefreshToken, _currentUser, null);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[AuthService] LoginAsync error: {ex.Message}");
             Console.WriteLine($"[AuthService] Stack trace: {ex.StackTrace}");
-            return new AuthResult(false, null, null, null, ex.Message);
+            return new ClientAuthResult(false, null, null, null, ex.Message);
         }
     }
 
@@ -139,7 +137,7 @@ public class AuthService : IAuthService
 
             _currentToken = response.Token;
             _refreshToken = response.RefreshToken;
-            _currentUser = ToClientUserDto(response.User);
+            _currentUser = ClientUserDto.FromUserDto(response.User);
 
             SaveCredentials();
             return true;
@@ -153,15 +151,8 @@ public class AuthService : IAuthService
 
     private void SaveCredentials()
     {
-        // Save to secure storage (Windows Credential Manager)
         try
         {
-            var credentialSet = new System.Net.NetworkCredential
-            {
-                UserName = _currentUser?.Username ?? string.Empty,
-                Password = _currentToken ?? string.Empty
-            };
-
             // In production, use Windows Credential Manager or similar
             // For now, we'll use isolated storage
             var appData = Path.Combine(
@@ -232,11 +223,5 @@ public class AuthService : IAuthService
     private void OnAuthStatusChanged(AuthStatusChangedEventArgs args)
     {
         AuthStatusChanged?.Invoke(this, args);
-    }
-
-    private static ClientUserDto? ToClientUserDto(AppUserDto? appUser)
-    {
-        if (appUser == null) return null;
-        return new ClientUserDto(appUser.Id, appUser.Username, appUser.Role, appUser.IsActive);
     }
 }
