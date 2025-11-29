@@ -94,7 +94,7 @@ public partial class MainWindow : Window
         {
             LoginButton.IsEnabled = false;
             LoadingIndicator.Visibility = Visibility.Visible;
-            ErrorMessageBlock.Visibility = Visibility.Collapsed;
+            ErrorBorder.Visibility = Visibility.Collapsed;
 
             var result = await _authService.LoginAsync(username, password);
             
@@ -121,7 +121,7 @@ public partial class MainWindow : Window
     private void ShowError(string message)
     {
         ErrorMessageBlock.Text = message;
-        ErrorMessageBlock.Visibility = Visibility.Visible;
+        ErrorBorder.Visibility = Visibility.Visible;
     }
 
     private void ShowDashboard()
@@ -158,7 +158,7 @@ public partial class MainWindow : Window
         MainContent.Content = null;
         UsernameTextBox.Text = "";
         PasswordBox.Password = "";
-        ErrorMessageBlock.Visibility = Visibility.Collapsed;
+        ErrorBorder.Visibility = Visibility.Collapsed;
         UsernameTextBox?.Focus();
     }
 
