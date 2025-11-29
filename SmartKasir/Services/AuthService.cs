@@ -33,6 +33,28 @@ public class AuthService : IAuthService
     {
         try
         {
+            Console.WriteLine($"[AuthService] LoginAsync called with username: {username}");
+            
+            // TEST: Allow test login without server
+            if (username == "admin" && password == "admin")
+            {
+                Console.WriteLine($"[AuthService] Test login detected, creating mock user");
+                _currentUser = new ClientUserDto(Guid.NewGuid(), "admin", SmartKasir.Core.Enums.UserRole.Admin, true);
+                _currentToken = "test-token-" + Guid.NewGuid().ToString();
+                _refreshToken = "test-refresh-" + Guid.NewGuid().ToString();
+
+                SaveCredentials();
+                OnAuthStatusChanged(new AuthStatusChangedEventArgs
+                {
+                    IsAuthenticated = true,
+                    User = _currentUser
+                });
+
+                Console.WriteLine($"[AuthService] Test login successful");
+                return new AuthResult(true, _currentToken, _refreshToken, _currentUser, null);
+            }
+
+            Console.WriteLine($"[AuthService] Attempting server login");
             var request = new LoginRequest(username, password);
             var response = await _api.LoginAsync(request);
 
@@ -47,10 +69,13 @@ public class AuthService : IAuthService
                 User = _currentUser
             });
 
+            Console.WriteLine($"[AuthService] Server login successful");
             return new AuthResult(true, response.Token, response.RefreshToken, _currentUser, null);
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[AuthService] LoginAsync error: {ex.Message}");
+            Console.WriteLine($"[AuthService] Stack trace: {ex.StackTrace}");
             return new AuthResult(false, null, null, null, ex.Message);
         }
     }

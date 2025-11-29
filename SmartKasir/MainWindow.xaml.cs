@@ -126,8 +126,30 @@ public partial class MainWindow : Window
 
     private void ShowDashboard()
     {
+        Console.WriteLine($"[MainWindow] ShowDashboard called");
+        Console.WriteLine($"[MainWindow] MainContent exists: {MainContent != null}");
+        Console.WriteLine($"[MainWindow] NavigationService exists: {_navigationService != null}");
+        
         LoginOverlay.Visibility = Visibility.Collapsed;
-        _navigationService?.NavigateTo<SmartKasir.Client.Views.DashboardView>();
+        Console.WriteLine($"[MainWindow] LoginOverlay hidden");
+        
+        try
+        {
+            Console.WriteLine($"[MainWindow] Calling NavigateTo<DashboardView>");
+            _navigationService?.NavigateTo<SmartKasir.Client.Views.DashboardView>();
+            Console.WriteLine($"[MainWindow] NavigateTo completed");
+            Console.WriteLine($"[MainWindow] MainContent.Content type: {MainContent?.Content?.GetType().Name}");
+            Console.WriteLine($"[MainWindow] MainContent.Content is null: {MainContent?.Content == null}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[MainWindow] ERROR in ShowDashboard: {ex.Message}");
+            Console.WriteLine($"[MainWindow] Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"[MainWindow] Inner exception: {ex.InnerException.Message}");
+            }
+        }
     }
 
     private void ShowLogin()

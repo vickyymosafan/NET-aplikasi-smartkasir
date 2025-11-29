@@ -30,6 +30,7 @@ public class NavigationService : INavigationService
     public void NavigateTo<T>(object? parameter = null) where T : class
     {
         var viewName = typeof(T).Name;
+        Console.WriteLine($"[NavigationService] NavigateTo<{viewName}> called");
         
         if (!string.IsNullOrEmpty(_currentView))
         {
@@ -39,11 +40,36 @@ public class NavigationService : INavigationService
         _currentView = viewName;
 
         // Get view from DI container
-        var view = _serviceProvider.GetService<T>();
-        
-        if (view != null && _mainContent != null)
+        Console.WriteLine($"[NavigationService] Resolving {viewName} from DI container");
+        try
         {
-            _mainContent.Content = view;
+            var view = _serviceProvider.GetService<T>();
+            Console.WriteLine($"[NavigationService] View resolved: {view != null}");
+            Console.WriteLine($"[NavigationService] View type: {view?.GetType().FullName}");
+            Console.WriteLine($"[NavigationService] MainContent exists: {_mainContent != null}");
+            
+            if (view != null && _mainContent != null)
+            {
+                Console.WriteLine($"[NavigationService] Setting MainContent.Content to {viewName}");
+                _mainContent.Content = view;
+                Console.WriteLine($"[NavigationService] MainContent.Content set successfully");
+            }
+            else
+            {
+                Console.WriteLine($"[NavigationService] ERROR: view is null or _mainContent is null");
+                Console.WriteLine($"[NavigationService]   view == null: {view == null}");
+                Console.WriteLine($"[NavigationService]   _mainContent == null: {_mainContent == null}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[NavigationService] ERROR resolving view: {ex.Message}");
+            Console.WriteLine($"[NavigationService] Stack trace: {ex.StackTrace}");
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"[NavigationService] Inner exception: {ex.InnerException.Message}");
+                Console.WriteLine($"[NavigationService] Inner stack: {ex.InnerException.StackTrace}");
+            }
         }
 
         OnNavigationOccurred(new NavigationEventArgs

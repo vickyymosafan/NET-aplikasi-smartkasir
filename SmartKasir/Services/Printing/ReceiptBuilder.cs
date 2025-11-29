@@ -10,11 +10,23 @@ namespace SmartKasir.Client.Services.Printing;
 public class ReceiptBuilder
 {
     private readonly List<byte> _buffer = new();
-    private readonly Encoding _encoding = Encoding.GetEncoding(437); // PC437 for thermal printers
+    private readonly Encoding _encoding;
     private const int LineWidth = 42; // Standard 80mm thermal printer width
 
     public ReceiptBuilder()
     {
+        // Try to use PC437 encoding, fallback to UTF8 if not available
+        try
+        {
+            _encoding = Encoding.GetEncoding(437); // PC437 for thermal printers
+        }
+        catch (ArgumentException)
+        {
+            // Code page 437 not available, use UTF8 as fallback
+            Console.WriteLine("[ReceiptBuilder] Code page 437 not available, using UTF8");
+            _encoding = Encoding.UTF8;
+        }
+
         // Initialize printer
         AddBytes(EscPosCommands.Initialize);
         AddBytes(EscPosCommands.CharsetPC437);
