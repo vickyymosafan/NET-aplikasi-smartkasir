@@ -40,7 +40,7 @@ public class TransactionService : ITransactionService
                 
                 return new TransactionResult(true, result, 0, null);
             }
-            catch (Exception ex)
+            catch
             {
                 // Fall back to local processing
                 return await ProcessSaleLocallyAsync(request);
