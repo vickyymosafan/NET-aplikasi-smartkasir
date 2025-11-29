@@ -256,8 +256,8 @@
                             </Grid>
                         </Border>
                         
-                        <Button Content="💳 Checkout" Style="{StaticResource PrimaryButton}" Height="44" Margin="0,0,0,8"/>
-                        <Button Content="🗑️ Bersihkan" Style="{StaticResource SecondaryButton}" Height="40" Margin="0,0,0,8"/>
+                        <Button Content="💳 Checkout" Style="{StaticResource PrimaryButton}" Height="44" Margin="0,0,0,8" Click="Checkout_Click"/>
+                        <Button Content="🗑️ Bersihkan" Style="{StaticResource SecondaryButton}" Height="40" Margin="0,0,0,8" Click="ClearCart_Click"/>
                         <Button Content="🚪 Logout" Style="{StaticResource DangerButton}" Height="40" Click="LogoutButton_Click"/>
                     </StackPanel>
                 </Border>
