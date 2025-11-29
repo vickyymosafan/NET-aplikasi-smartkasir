@@ -20,10 +20,11 @@ public class ReceiptBuilder
         {
             _encoding = Encoding.GetEncoding(437); // PC437 for thermal printers
         }
-        catch (ArgumentException)
+        catch (Exception ex)
         {
             // Code page 437 not available, use UTF8 as fallback
-            Console.WriteLine("[ReceiptBuilder] Code page 437 not available, using UTF8");
+            Console.WriteLine($"[ReceiptBuilder] Failed to load encoding 437: {ex.Message}");
+            Console.WriteLine("[ReceiptBuilder] Using UTF8 as fallback");
             _encoding = Encoding.UTF8;
         }
 
