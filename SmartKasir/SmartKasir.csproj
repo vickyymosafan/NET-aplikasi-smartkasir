@@ -26,4 +26,9 @@
     <ProjectReference Include="..\SmartKasir.Shared\SmartKasir.Shared.csproj" />
   </ItemGroup>
 
+  <!-- Include wwwroot as static web assets -->
+  <ItemGroup>
+    <Content Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

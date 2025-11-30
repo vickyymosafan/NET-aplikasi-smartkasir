@@ -1,23 +1,55 @@
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not Found</PageTitle>
-        <LayoutView Layout="@typeof(Layout.MainLayout)">
-            <div class="empty-state">
-                <div class="empty-state-icon">🔍</div>
-                <div class="empty-state-title">Halaman tidak ditemukan</div>
-                <div class="empty-state-hint">Halaman yang Anda cari tidak ada</div>
-            </div>
-        </LayoutView>
-    </NotFound>
-</Router>
+@inject IAuthService AuthService
+
+@if (!isInitialized)
+{
+    <div class="loading-screen">
+        <div class="loading-content">
+            <div class="logo-box">SK</div>
+            <h1>Smart<span class="accent">Kasir</span></h1>
+            <p>Memuat aplikasi...</p>
+        </div>
+    </div>
+}
+else if (!AuthService.IsAuthenticated)
+{
+    <Pages.Login />
+}
+else
+{
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not Found</PageTitle>
+            <LayoutView Layout="@typeof(Layout.MainLayout)">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <div class="empty-state-title">Halaman tidak ditemukan</div>
+                    <div class="empty-state-hint">Halaman yang Anda cari tidak ada</div>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+}
 
 @code {
-    protected override void OnInitialized()
+    private bool isInitialized = false;
+
+    protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("App initialized");
+        try
+        {
+            Console.WriteLine("[App] Initializing...");
+            await AuthService.InitializeAsync();
+            isInitialized = true;
+            Console.WriteLine("[App] Initialized successfully");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[App] ERROR: {ex.Message}");
+            isInitialized = true;
+        }
     }
 }
