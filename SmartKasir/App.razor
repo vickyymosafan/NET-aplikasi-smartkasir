@@ -1,0 +1,16 @@
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Not Found</PageTitle>
+        <LayoutView Layout="@typeof(Layout.MainLayout)">
+            <div class="empty-state">
+                <div class="empty-state-icon">🔍</div>
+                <div class="empty-state-title">Halaman tidak ditemukan</div>
+                <div class="empty-state-hint">Halaman yang Anda cari tidak ada</div>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>

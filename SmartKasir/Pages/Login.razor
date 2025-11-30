@@ -1,0 +1,101 @@
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+
+<div class="login-page">
+    <div class="login-branding">
+        <div class="logo-box">SK</div>
+        <h1>Smart<span class="accent">Kasir</span></h1>
+        <p class="tagline">Sistem Point of Sale Modern</p>
+
+        <ul class="feature-list">
+            <li class="feature-item">
+                <div class="feature-icon">✓</div>
+                <span>Transaksi cepat & akurat</span>
+            </li>
+            <li class="feature-item">
+                <div class="feature-icon">✓</div>
+                <span>Laporan real-time</span>
+            </li>
+            <li class="feature-item">
+                <div class="feature-icon">✓</div>
+                <span>Mode offline tersedia</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="login-form-container">
+        <div class="login-card">
+            <h2>Selamat Datang</h2>
+            <p class="subtitle">Masuk ke akun Anda untuk melanjutkan</p>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="login-error">@errorMessage</div>
+            }
+
+            <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-input" @bind="loginModel.Username" placeholder="Masukkan username" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" @bind="loginModel.Password" placeholder="Masukkan password" />
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg btn-block" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span>Memproses...</span>
+                    }
+                    else
+                    {
+                        <span>Masuk</span>
+                    }
+                </button>
+            </EditForm>
+
+            <div class="demo-credentials">
+                <div class="title">Demo Credentials</div>
+                <div class="cred"><strong>Admin:</strong> admin / admin</div>
+                <div class="cred"><strong>Kasir:</strong> kasir / kasir</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private string? errorMessage;
+    private bool isLoading;
+
+    private async Task HandleLogin()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await AuthService.LoginAsync(loginModel.Username, loginModel.Password);
+            if (!result.Success)
+            {
+                errorMessage = result.ErrorMessage ?? "Login gagal";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private class LoginModel
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}

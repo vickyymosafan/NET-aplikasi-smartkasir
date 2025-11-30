@@ -1,0 +1,159 @@
+@inject ICartService CartService
+@implements IDisposable
+
+<aside class="cart-sidebar">
+    <div class="cart-header">
+        <div class="cart-icon">🛒</div>
+        <div>
+            <div class="cart-title">Keranjang</div>
+            <div class="cart-count">@CartService.Items.Count item</div>
+        </div>
+    </div>
+
+    <div class="cart-items">
+        @if (!CartService.Items.Any())
+        {
+            <div class="cart-empty">
+                <div class="cart-empty-icon">🛒</div>
+                <div class="cart-empty-text">Keranjang kosong</div>
+                <div class="cart-empty-hint">Klik produk untuk menambahkan</div>
+            </div>
+        }
+        else
+        {
+            @foreach (var item in CartService.Items)
+            {
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">@item.ProductName</div>
+                        <div class="cart-item-price">Rp @item.UnitPrice.ToString("N0")</div>
+                    </div>
+                    <div class="cart-item-qty">
+                        <button class="qty-btn" @onclick="() => CartService.DecreaseQuantity(item.ProductId)">-</button>
+                        <span>@item.Quantity</span>
+                        <button class="qty-btn" @onclick="() => CartService.IncreaseQuantity(item.ProductId)">+</button>
+                    </div>
+                    <div class="cart-item-subtotal">Rp @item.Subtotal.ToString("N0")</div>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="cart-footer">
+        <div class="cart-summary-row">
+            <span>Subtotal</span>
+            <span>Rp @CartService.Subtotal.ToString("N0")</span>
+        </div>
+        <div class="cart-summary-row">
+            <span>Pajak (10%)</span>
+            <span>Rp @CartService.Tax.ToString("N0")</span>
+        </div>
+        <div class="cart-total-row">
+            <span class="cart-total-label">Total</span>
+            <span class="cart-total-value">Rp @CartService.Total.ToString("N0")</span>
+        </div>
+
+        <button class="btn btn-primary btn-block btn-lg mb-2" @onclick="Checkout" disabled="@(!CartService.Items.Any())">
+            💳 Checkout
+        </button>
+        <button class="btn btn-secondary btn-block mb-2" @onclick="ClearCart" disabled="@(!CartService.Items.Any())">
+            🗑️ Bersihkan
+        </button>
+    </div>
+</aside>
+
+@if (showCheckoutDialog)
+{
+    <div class="modal-overlay" @onclick="CloseCheckout">
+        <div class="modal" @onclick:stopPropagation="true">
+            <h3 class="modal-title">💳 Checkout</h3>
+
+            <div class="form-group">
+                <label class="form-label">Total Pembayaran</label>
+                <div style="font-size: 28px; font-weight: bold; color: var(--color-accent);">
+                    Rp @CartService.Total.ToString("N0")
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Jumlah Bayar</label>
+                <input type="number" class="form-input" @bind="paymentAmount" />
+            </div>
+
+            @if (paymentAmount >= CartService.Total)
+            {
+                <div style="background: var(--bg-card); padding: 14px; border-radius: var(--border-radius); margin-bottom: 16px;">
+                    <div class="text-muted" style="font-size: 13px;">Kembalian</div>
+                    <div style="font-size: 24px; font-weight: bold; color: var(--color-success);">
+                        Rp @((paymentAmount - CartService.Total).ToString("N0"))
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(checkoutError))
+            {
+                <div class="login-error">@checkoutError</div>
+            }
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="CloseCheckout">Batal</button>
+                <button class="btn btn-primary" @onclick="ProcessCheckout" disabled="@(paymentAmount < CartService.Total)">
+                    ✓ Proses
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool showCheckoutDialog;
+    private decimal paymentAmount;
+    private string? checkoutError;
+
+    protected override void OnInitialized()
+    {
+        CartService.OnCartChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        CartService.OnCartChanged -= StateHasChanged;
+    }
+
+    private void Checkout()
+    {
+        paymentAmount = CartService.Total;
+        checkoutError = null;
+        showCheckoutDialog = true;
+    }
+
+    private void CloseCheckout()
+    {
+        showCheckoutDialog = false;
+    }
+
+    private void ClearCart()
+    {
+        CartService.Clear();
+    }
+
+    private async Task ProcessCheckout()
+    {
+        if (paymentAmount < CartService.Total)
+        {
+            checkoutError = "Jumlah bayar kurang dari total";
+            return;
+        }
+
+        try
+        {
+            // TODO: Process transaction via API
+            CartService.Clear();
+            CloseCheckout();
+        }
+        catch (Exception ex)
+        {
+            checkoutError = ex.Message;
+        }
+    }
+}

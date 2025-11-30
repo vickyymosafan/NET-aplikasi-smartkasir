@@ -1,0 +1,61 @@
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <div class="logo-icon">SK</div>
+            <h1>Smart<span class="accent">Kasir</span></h1>
+        </div>
+    </div>
+
+    <nav class="nav-menu">
+        <NavLink class="nav-item" href="" Match="NavLinkMatch.All">
+            <span class="icon">🏠</span>
+            <span>Dashboard</span>
+        </NavLink>
+
+        @if (AuthService.CurrentUser?.Role == "Admin")
+        {
+            <NavLink class="nav-item" href="products">
+                <span class="icon">📦</span>
+                <span>Kelola Produk</span>
+            </NavLink>
+            <NavLink class="nav-item" href="categories">
+                <span class="icon">🏷️</span>
+                <span>Kategori</span>
+            </NavLink>
+            <NavLink class="nav-item" href="users">
+                <span class="icon">👥</span>
+                <span>Pengguna</span>
+            </NavLink>
+            <NavLink class="nav-item" href="reports">
+                <span class="icon">📊</span>
+                <span>Laporan</span>
+            </NavLink>
+            <NavLink class="nav-item" href="backup">
+                <span class="icon">💾</span>
+                <span>Backup</span>
+            </NavLink>
+        }
+    </nav>
+
+    <div style="padding: 16px; border-top: 1px solid var(--border-color);">
+        <div class="status-badge" style="margin-bottom: 12px;">
+            <span class="status-dot online"></span>
+            <span class="text-success">Online</span>
+            <span style="margin-left: 8px; color: var(--text-secondary);">@AuthService.CurrentUser?.Username</span>
+        </div>
+        <button class="btn btn-danger btn-block" @onclick="Logout">
+            🚪 Logout
+        </button>
+    </div>
+</aside>
+
+@code {
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}

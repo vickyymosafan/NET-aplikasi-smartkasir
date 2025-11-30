@@ -1,227 +1,83 @@
-using System.IO;
-using SmartKasir.Application.DTOs;
+using System.Net.Http.Json;
+using Blazored.LocalStorage;
 
 namespace SmartKasir.Client.Services;
 
-/// <summary>
-/// Implementation dari IAuthService
-/// </summary>
 public class AuthService : IAuthService
 {
-    private readonly ISmartKasirApi _api;
-    private ClientUserDto? _currentUser;
-    private string? _currentToken;
-    private string? _refreshToken;
+    private readonly HttpClient _http;
+    private readonly ILocalStorageService _localStorage;
+    private const string AuthKey = "smartkasir_auth";
 
-    public event EventHandler<AuthStatusChangedEventArgs>? AuthStatusChanged;
+    public bool IsAuthenticated => CurrentUser != null;
+    public UserInfo? CurrentUser { get; private set; }
+    public event Action? OnAuthStateChanged;
 
-    public bool IsAuthenticated => _currentUser != null && !string.IsNullOrEmpty(_currentToken);
-
-    public ClientUserDto? CurrentUser => _currentUser;
-
-    public string? CurrentToken => _currentToken;
-
-    public AuthService(ISmartKasirApi api)
+    public AuthService(HttpClient http, ILocalStorageService localStorage)
     {
-        _api = api;
-        LoadStoredCredentials();
+        _http = http;
+        _localStorage = localStorage;
     }
 
-    public async Task<ClientAuthResult> LoginAsync(string username, string password)
+    public async Task InitializeAsync()
     {
         try
         {
-            Console.WriteLine($"[AuthService] LoginAsync called with username: {username}");
+            CurrentUser = await _localStorage.GetItemAsync<UserInfo>(AuthKey);
+            OnAuthStateChanged?.Invoke();
+        }
+        catch
+        {
+            CurrentUser = null;
+        }
+    }
+
+    public async Task<AuthResult> LoginAsync(string username, string password)
+    {
+        try
+        {
+            // Try API login first
+            var response = await _http.PostAsJsonAsync("/api/auth/login", new { username, password });
             
-            // TEST: Allow test login without server
-            // Admin login: admin/admin
-            if (username == "admin" && password == "admin")
+            if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"[AuthService] Test Admin login detected");
-                _currentUser = new ClientUserDto(Guid.NewGuid(), "admin", SmartKasir.Core.Enums.UserRole.Admin, true);
-                _currentToken = "test-token-" + Guid.NewGuid().ToString();
-                _refreshToken = "test-refresh-" + Guid.NewGuid().ToString();
-
-                SaveCredentials();
-                OnAuthStatusChanged(new AuthStatusChangedEventArgs
+                var result = await response.Content.ReadFromJsonAsync<AuthResult>();
+                if (result?.Success == true && result.User != null)
                 {
-                    IsAuthenticated = true,
-                    User = _currentUser
-                });
-
-                Console.WriteLine($"[AuthService] Admin login successful");
-                return new ClientAuthResult(true, _currentToken, _refreshToken, _currentUser, null);
-            }
-            
-            // Cashier login: kasir/kasir
-            if (username == "kasir" && password == "kasir")
-            {
-                Console.WriteLine($"[AuthService] Test Cashier login detected");
-                _currentUser = new ClientUserDto(Guid.NewGuid(), "kasir", SmartKasir.Core.Enums.UserRole.Cashier, true);
-                _currentToken = "test-token-" + Guid.NewGuid().ToString();
-                _refreshToken = "test-refresh-" + Guid.NewGuid().ToString();
-
-                SaveCredentials();
-                OnAuthStatusChanged(new AuthStatusChangedEventArgs
-                {
-                    IsAuthenticated = true,
-                    User = _currentUser
-                });
-
-                Console.WriteLine($"[AuthService] Cashier login successful");
-                return new ClientAuthResult(true, _currentToken, _refreshToken, _currentUser, null);
-            }
-
-            Console.WriteLine($"[AuthService] Attempting server login");
-            var request = new LoginRequest(username, password);
-            var response = await _api.LoginAsync(request);
-
-            _currentUser = ClientUserDto.FromUserDto(response.User);
-            _currentToken = response.Token;
-            _refreshToken = response.RefreshToken;
-
-            SaveCredentials();
-            OnAuthStatusChanged(new AuthStatusChangedEventArgs
-            {
-                IsAuthenticated = true,
-                User = _currentUser
-            });
-
-            Console.WriteLine($"[AuthService] Server login successful");
-            return new ClientAuthResult(true, response.Token, response.RefreshToken, _currentUser, null);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[AuthService] LoginAsync error: {ex.Message}");
-            Console.WriteLine($"[AuthService] Stack trace: {ex.StackTrace}");
-            return new ClientAuthResult(false, null, null, null, ex.Message);
-        }
-    }
-
-    public async Task LogoutAsync()
-    {
-        try
-        {
-            await _api.LogoutAsync();
-        }
-        catch
-        {
-            // Ignore errors during logout
-        }
-        finally
-        {
-            _currentUser = null;
-            _currentToken = null;
-            _refreshToken = null;
-            ClearStoredCredentials();
-
-            OnAuthStatusChanged(new AuthStatusChangedEventArgs
-            {
-                IsAuthenticated = false,
-                User = null
-            });
-        }
-    }
-
-    public async Task<bool> RefreshTokenAsync()
-    {
-        if (string.IsNullOrEmpty(_refreshToken))
-        {
-            return false;
-        }
-
-        try
-        {
-            var request = new RefreshTokenRequest(_refreshToken);
-            var response = await _api.RefreshTokenAsync(request);
-
-            _currentToken = response.Token;
-            _refreshToken = response.RefreshToken;
-            _currentUser = ClientUserDto.FromUserDto(response.User);
-
-            SaveCredentials();
-            return true;
-        }
-        catch
-        {
-            await LogoutAsync();
-            return false;
-        }
-    }
-
-    private void SaveCredentials()
-    {
-        try
-        {
-            // In production, use Windows Credential Manager or similar
-            // For now, we'll use isolated storage
-            var appData = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "SmartKasir");
-
-            if (!Directory.Exists(appData))
-            {
-                Directory.CreateDirectory(appData);
-            }
-
-            var credFile = Path.Combine(appData, ".credentials");
-            File.WriteAllText(credFile, $"{_currentUser?.Id}|{_currentToken}|{_refreshToken}");
-        }
-        catch
-        {
-            // Ignore credential save errors
-        }
-    }
-
-    private void LoadStoredCredentials()
-    {
-        try
-        {
-            var appData = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "SmartKasir");
-
-            var credFile = Path.Combine(appData, ".credentials");
-            if (File.Exists(credFile))
-            {
-                var content = File.ReadAllText(credFile);
-                var parts = content.Split('|');
-                if (parts.Length == 3)
-                {
-                    _currentToken = parts[1];
-                    _refreshToken = parts[2];
-                    // Note: We don't restore _currentUser here, it will be fetched on demand
+                    CurrentUser = result.User;
+                    await _localStorage.SetItemAsync(AuthKey, CurrentUser);
+                    OnAuthStateChanged?.Invoke();
+                    return result;
                 }
             }
         }
         catch
         {
-            // Ignore credential load errors
+            // Fallback to demo credentials if API unavailable
         }
-    }
 
-    private void ClearStoredCredentials()
-    {
-        try
+        // Demo credentials fallback
+        if ((username == "admin" && password == "admin") ||
+            (username == "kasir" && password == "kasir"))
         {
-            var appData = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "SmartKasir");
-
-            var credFile = Path.Combine(appData, ".credentials");
-            if (File.Exists(credFile))
+            CurrentUser = new UserInfo
             {
-                File.Delete(credFile);
-            }
+                Id = username == "admin" ? 1 : 2,
+                Username = username,
+                Role = username == "admin" ? "Admin" : "Kasir"
+            };
+            await _localStorage.SetItemAsync(AuthKey, CurrentUser);
+            OnAuthStateChanged?.Invoke();
+            return new AuthResult { Success = true, User = CurrentUser };
         }
-        catch
-        {
-            // Ignore errors
-        }
+
+        return new AuthResult { Success = false, ErrorMessage = "Username atau password salah" };
     }
 
-    private void OnAuthStatusChanged(AuthStatusChangedEventArgs args)
+    public async Task LogoutAsync()
     {
-        AuthStatusChanged?.Invoke(this, args);
+        CurrentUser = null;
+        await _localStorage.RemoveItemAsync(AuthKey);
+        OnAuthStateChanged?.Invoke();
     }
 }

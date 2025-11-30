@@ -1,0 +1,30 @@
+@inherits LayoutComponentBase
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+
+@if (!AuthService.IsAuthenticated)
+{
+    <SmartKasir.Client.Pages.Login />
+}
+else
+{
+    <div class="app-layout">
+        <NavMenu />
+        <main class="main-content">
+            @Body
+        </main>
+    </div>
+}
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthService.InitializeAsync();
+        AuthService.OnAuthStateChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnAuthStateChanged -= StateHasChanged;
+    }
+}

@@ -1,292 +1,104 @@
-using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Json;
 using SmartKasir.Application.DTOs;
-using SmartKasir.Shared.Data;
 
 namespace SmartKasir.Client.Services;
 
-/// <summary>
-/// Implementation dari IProductService
-/// </summary>
 public class ProductService : IProductService
 {
-    private readonly ISmartKasirApi _api;
-    private readonly LocalDbContext _dbContext;
-    private readonly ISyncService _syncService;
-
-    public ProductService(ISmartKasirApi api, LocalDbContext dbContext, ISyncService syncService)
+    private readonly HttpClient _http;
+    
+    // Demo products for offline/fallback
+    private static readonly List<ProductDto> _demoProducts = new()
     {
-        _api = api;
-        _dbContext = dbContext;
-        _syncService = syncService;
+        new() { Id = Guid.NewGuid(), Barcode = "001", Name = "Indomie Goreng", Price = 3500, StockQty = 100, CategoryName = "Makanan" },
+        new() { Id = Guid.NewGuid(), Barcode = "002", Name = "Aqua 600ml", Price = 4000, StockQty = 50, CategoryName = "Minuman" },
+        new() { Id = Guid.NewGuid(), Barcode = "003", Name = "Teh Botol Sosro", Price = 5000, StockQty = 30, CategoryName = "Minuman" },
+        new() { Id = Guid.NewGuid(), Barcode = "004", Name = "Roti Tawar Sari Roti", Price = 15000, StockQty = 20, CategoryName = "Makanan" },
+        new() { Id = Guid.NewGuid(), Barcode = "005", Name = "Sabun Lifebuoy", Price = 8500, StockQty = 40, CategoryName = "Toiletries" },
+        new() { Id = Guid.NewGuid(), Barcode = "006", Name = "Pasta Gigi Pepsodent", Price = 12000, StockQty = 25, CategoryName = "Toiletries" },
+        new() { Id = Guid.NewGuid(), Barcode = "007", Name = "Minyak Goreng Bimoli 1L", Price = 28000, StockQty = 15, CategoryName = "Bahan Pokok" },
+        new() { Id = Guid.NewGuid(), Barcode = "008", Name = "Gula Pasir 1kg", Price = 16000, StockQty = 35, CategoryName = "Bahan Pokok" },
+    };
+
+    public ProductService(HttpClient http)
+    {
+        _http = http;
     }
 
-    public async Task<ProductDto?> GetByBarcodeAsync(string barcode)
+    public async Task<List<ProductDto>> GetProductsAsync()
     {
-        // Try local cache first
-        var localProduct = await _dbContext.Products
-            .FirstOrDefaultAsync(p => p.Barcode == barcode && p.IsActive);
-
-        if (localProduct != null)
-        {
-            return new ProductDto(
-                localProduct.Id,
-                localProduct.Barcode,
-                localProduct.Name,
-                localProduct.Price,
-                localProduct.StockQty,
-                localProduct.CategoryId,
-                localProduct.CategoryName,
-                localProduct.IsActive);
-        }
-
-        // If online, try server
-        if (_syncService.IsOnline)
-        {
-            try
-            {
-                var product = await _api.GetProductByBarcodeAsync(barcode);
-                
-                // Cache it locally
-                var cached = new LocalProduct
-                {
-                    Id = product.Id,
-                    Barcode = product.Barcode,
-                    Name = product.Name,
-                    Price = product.Price,
-                    StockQty = product.StockQty,
-                    CategoryId = product.CategoryId,
-                    CategoryName = product.CategoryName,
-                    IsActive = product.IsActive,
-                    LastSyncedAt = DateTime.UtcNow
-                };
-
-                _dbContext.Products.Add(cached);
-                await _dbContext.SaveChangesAsync();
-
-                return product;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        return null;
-    }
-
-    public async Task<IEnumerable<ProductDto>> SearchAsync(string keyword)
-    {
-        // Search in local cache first
-        var localResults = await _dbContext.Products
-            .Where(p => p.IsActive && 
-                   (p.Name.Contains(keyword) || p.Barcode.Contains(keyword)))
-            .ToListAsync();
-
-        var results = localResults.Select(p => new ProductDto(
-            p.Id, p.Barcode, p.Name, p.Price, p.StockQty, p.CategoryId, p.CategoryName, p.IsActive))
-            .ToList();
-
-        // If online and local results are limited, try server
-        if (_syncService.IsOnline && results.Count < 10)
-        {
-            try
-            {
-                var serverResults = await _api.SearchProductsAsync(keyword);
-                
-                // Merge and deduplicate
-                var merged = results
-                    .Concat(serverResults)
-                    .DistinctBy(p => p.Id)
-                    .ToList();
-
-                return merged;
-            }
-            catch
-            {
-                return results;
-            }
-        }
-
-        return results;
-    }
-
-    public async Task<IEnumerable<ProductDto>> GetAllAsync()
-    {
-        // Get from local cache
-        var localProducts = await _dbContext.Products
-            .Where(p => p.IsActive)
-            .ToListAsync();
-
-        return localProducts.Select(p => new ProductDto(
-            p.Id, p.Barcode, p.Name, p.Price, p.StockQty, p.CategoryId, p.CategoryName, p.IsActive));
-    }
-
-    public async Task<ApiPagedResult<ProductDto>> GetPagedAsync(int page = 1, int pageSize = 50)
-    {
-        if (_syncService.IsOnline)
-        {
-            try
-            {
-                return await _api.GetProductsAsync(page, pageSize);
-            }
-            catch
-            {
-                // Fall back to local
-            }
-        }
-
-        // Get from local cache
-        var query = _dbContext.Products.Where(p => p.IsActive);
-        var totalCount = await query.CountAsync();
-        var items = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-
-        var dtos = items.Select(p => new ProductDto(
-            p.Id, p.Barcode, p.Name, p.Price, p.StockQty, p.CategoryId, p.CategoryName, p.IsActive))
-            .ToList();
-
-        return new ApiPagedResult<ProductDto>(dtos, totalCount, page, pageSize);
-    }
-
-    public async Task<ProductDto> CreateAsync(CreateProductRequest request)
-    {
-        return await _api.CreateProductAsync(request);
-    }
-
-    public async Task<ProductDto> UpdateAsync(Guid id, UpdateProductRequest request)
-    {
-        return await _api.UpdateProductAsync(id, request);
-    }
-
-    public async Task DeleteAsync(Guid id)
-    {
-        await _api.DeleteProductAsync(id);
-    }
-
-    public async Task RefreshCacheAsync()
-    {
-        if (!_syncService.IsOnline)
-        {
-            return;
-        }
-
         try
         {
-            var products = await _api.GetProductsAsync(page: 1, pageSize: 10000);
-
-            // Clear and rebuild cache
-            _dbContext.Products.RemoveRange(_dbContext.Products);
-            await _dbContext.SaveChangesAsync();
-
-            foreach (var product in products.Items)
-            {
-                _dbContext.Products.Add(new LocalProduct
-                {
-                    Id = product.Id,
-                    Barcode = product.Barcode,
-                    Name = product.Name,
-                    Price = product.Price,
-                    StockQty = product.StockQty,
-                    CategoryId = product.CategoryId,
-                    CategoryName = product.CategoryName,
-                    IsActive = product.IsActive,
-                    LastSyncedAt = DateTime.UtcNow
-                });
-            }
-
-            await _dbContext.SaveChangesAsync();
+            var products = await _http.GetFromJsonAsync<List<ProductDto>>("/api/products");
+            return products ?? _demoProducts;
         }
         catch
         {
-            // Ignore cache refresh errors
+            return _demoProducts;
         }
     }
 
-    /// <summary>
-    /// Create produk lokal (untuk Admin)
-    /// </summary>
-    public async Task<ProductDto> CreateLocalAsync(string barcode, string name, decimal price, int stockQty, string categoryName)
+    public async Task<ProductDto?> GetProductAsync(Guid id)
     {
-        Console.WriteLine($"[ProductService] Creating local product: {name}");
-        
-        // Check if barcode already exists
-        var existing = await _dbContext.Products.FirstOrDefaultAsync(p => p.Barcode == barcode);
-        if (existing != null)
+        try
         {
-            throw new InvalidOperationException($"Barcode {barcode} sudah digunakan");
+            return await _http.GetFromJsonAsync<ProductDto>($"/api/products/{id}");
         }
-
-        var product = new LocalProduct
+        catch
         {
-            Id = Guid.NewGuid(),
-            Barcode = barcode,
-            Name = name,
-            Price = price,
-            StockQty = stockQty,
-            CategoryId = 1, // Default category
-            CategoryName = categoryName,
-            IsActive = true,
-            LastSyncedAt = DateTime.UtcNow
-        };
-
-        _dbContext.Products.Add(product);
-        await _dbContext.SaveChangesAsync();
-
-        Console.WriteLine($"[ProductService] Product created with ID: {product.Id}");
-
-        return new ProductDto(
-            product.Id,
-            product.Barcode,
-            product.Name,
-            product.Price,
-            product.StockQty,
-            product.CategoryId,
-            product.CategoryName,
-            product.IsActive);
+            return _demoProducts.FirstOrDefault(p => p.Id == id);
+        }
     }
 
-    /// <summary>
-    /// Update produk lokal
-    /// </summary>
-    public async Task<ProductDto> UpdateLocalAsync(Guid id, string name, decimal price, int stockQty, bool isActive)
+    public async Task<ProductDto> CreateProductAsync(ProductDto product)
     {
-        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == id);
-        if (product == null)
+        try
         {
-            throw new InvalidOperationException($"Produk dengan ID {id} tidak ditemukan");
+            var response = await _http.PostAsJsonAsync("/api/products", product);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<ProductDto>() ?? product;
         }
-
-        product.Name = name;
-        product.Price = price;
-        product.StockQty = stockQty;
-        product.IsActive = isActive;
-        product.LastSyncedAt = DateTime.UtcNow;
-
-        await _dbContext.SaveChangesAsync();
-
-        return new ProductDto(
-            product.Id,
-            product.Barcode,
-            product.Name,
-            product.Price,
-            product.StockQty,
-            product.CategoryId,
-            product.CategoryName,
-            product.IsActive);
+        catch
+        {
+            product.Id = Guid.NewGuid();
+            _demoProducts.Add(product);
+            return product;
+        }
     }
 
-    /// <summary>
-    /// Delete produk lokal (soft delete)
-    /// </summary>
-    public async Task DeleteLocalAsync(Guid id)
+    public async Task UpdateProductAsync(ProductDto product)
     {
-        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == id);
-        if (product != null)
+        try
         {
-            product.IsActive = false;
-            await _dbContext.SaveChangesAsync();
+            var response = await _http.PutAsJsonAsync($"/api/products/{product.Id}", product);
+            response.EnsureSuccessStatusCode();
+        }
+        catch
+        {
+            var existing = _demoProducts.FirstOrDefault(p => p.Id == product.Id);
+            if (existing != null)
+            {
+                existing.Name = product.Name;
+                existing.Price = product.Price;
+                existing.StockQty = product.StockQty;
+            }
+        }
+    }
+
+    public async Task DeleteProductAsync(Guid id)
+    {
+        try
+        {
+            var response = await _http.DeleteAsync($"/api/products/{id}");
+            response.EnsureSuccessStatusCode();
+        }
+        catch
+        {
+            var product = _demoProducts.FirstOrDefault(p => p.Id == id);
+            if (product != null)
+            {
+                _demoProducts.Remove(product);
+            }
         }
     }
 }
