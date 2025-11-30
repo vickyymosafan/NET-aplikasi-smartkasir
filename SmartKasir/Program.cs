@@ -1,25 +1,43 @@
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Components.WebView.WindowsForms;
+using Microsoft.Extensions.DependencyInjection;
 using Blazored.LocalStorage;
-using SmartKasir.Client;
 using SmartKasir.Client.Services;
+using System.Windows.Forms;
 
-var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
+namespace SmartKasir.Client;
 
-// Configure HttpClient for API calls
-builder.Services.AddScoped(sp => new HttpClient 
-{ 
-    BaseAddress = new Uri("http://localhost:5146") 
-});
+static class Program
+{
+    [STAThread]
+    static void Main()
+    {
+        ApplicationConfiguration.Initialize();
 
-// Add Blazored LocalStorage
-builder.Services.AddBlazoredLocalStorage();
+        var services = new ServiceCollection();
+        
+        // Configure HttpClient
+        services.AddScoped(sp => new HttpClient 
+        { 
+            BaseAddress = new Uri("http://localhost:5146"),
+            Timeout = TimeSpan.FromSeconds(30)
+        });
 
-// Register Services
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ICartService, CartService>();
-builder.Services.AddScoped<IProductService, ProductService>();
+        // Add Blazored LocalStorage
+        services.AddBlazoredLocalStorage();
 
-await builder.Build().RunAsync();
+        // Register Services
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ICartService, CartService>();
+        services.AddScoped<IProductService, ProductService>();
+
+        // Add Blazor WebView
+        services.AddWindowsFormsBlazorWebView();
+#if DEBUG
+        services.AddBlazorWebViewDeveloperTools();
+#endif
+
+        var serviceProvider = services.BuildServiceProvider();
+        var mainForm = new MainForm(serviceProvider);
+        System.Windows.Forms.Application.Run(mainForm);
+    }
+}
